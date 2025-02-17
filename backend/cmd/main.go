@@ -1,9 +1,9 @@
 package main
 
-func init() {
+import "github.com/gofiber/fiber/v2"
 
-}
+func main() {
+	app := fiber.New()
 
-func main(){
-	
+	app.Listen(":8080")
 }

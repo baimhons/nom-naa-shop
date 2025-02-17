@@ -12,5 +12,6 @@ type AddressRequest struct {
 	SubDistrictNameTH string `json:"sub_district_name_th"`
 	SubDistrictNameEN string `json:"sub_district_name_en"`
 	PostalCode        int    `json:"postal_code" validate:"required"`
+	AddressDetail     string `json:"address_detail"`
 	UserID            int    `json:"user_id" validate:"required"` // เชื่อมโยงกับผู้ใช้
 }

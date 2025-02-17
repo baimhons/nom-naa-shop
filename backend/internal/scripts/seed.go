@@ -5,6 +5,9 @@ import (
 	"io"
 	"log"
 	"os"
+
+	models "github.com/baimhons/nom-naa-shop.git/internal/models/address_models"
+	"gorm.io/gorm"
 )
 
 type jsonProvince struct {
@@ -28,20 +31,20 @@ type jsonSubDistrict struct {
 	PostalCode int    `json:"postal_code"`
 }
 
-func SeedData() {
-	provinceFile, err := os.Open("data/provinces.json")
+func SeedData(db *gorm.DB) {
+	provinceFile, err := os.Open("data/address/provinces.json")
 	if err != nil {
 		log.Fatalf("failed to open province file: %v", err)
 	}
 	defer provinceFile.Close()
 
-	districtFile, err := os.Open("data/districts.json")
+	districtFile, err := os.Open("data/address/districts.json")
 	if err != nil {
 		log.Fatalf("failed to open district file: %v", err)
 	}
 	defer districtFile.Close()
 
-	subDistrictFile, err := os.Open("data/subdistricts.json")
+	subDistrictFile, err := os.Open("data/address/sub_districts.json")
 	if err != nil {
 		log.Fatalf("failed to open subdistrict file: %v", err)
 	}
@@ -75,5 +78,17 @@ func SeedData() {
 	var subDistricts []jsonSubDistrict
 	if err := json.Unmarshal(byteSubDistrict, &subDistricts); err != nil {
 		log.Fatalf("failed to unmarshal subdistrict data: %v", err)
+	}
+
+	if err := db.AutoMigrate(
+		&models.Province{},
+		&models.Districts{},
+		&models.SubDistricts{},
+	); err != nil {
+		log.Fatalf("failed to migrate database: %v", err)
+	}
+
+	for _, province := range provinces {
+		db.Create(&models.Province{ID: province.ID, NameTH: province.NameTH, NameEN: province.NameEN})
 	}
 }
