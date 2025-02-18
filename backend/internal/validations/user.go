@@ -11,6 +11,7 @@ type UserValiateImpl struct{}
 
 type UserValidate interface {
 	ValidateRegisterUser(c *fiber.Ctx) error
+	ValidateLoginUser(c *fiber.Ctx) error
 }
 
 func NewUserValiateImpl() *UserValiateImpl {
@@ -19,6 +20,34 @@ func NewUserValiateImpl() *UserValiateImpl {
 
 func (u *UserValiateImpl) ValidateRegisterUser(c *fiber.Ctx) error {
 	var req request.RegisterUser
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: err.Error(),
+			Error:   err,
+		})
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: err.Error(),
+			Error:   err,
+		})
+	}
+
+	if req.Username == "admin" {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "username cannot be admin",
+		})
+	}
+
+	c.Locals("req", req)
+	return c.Next()
+}
+
+func (u *UserValiateImpl) ValidateLoginUser(c *fiber.Ctx) error {
+	var req request.LoginUser
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{

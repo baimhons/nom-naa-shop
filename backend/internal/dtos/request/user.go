@@ -4,12 +4,10 @@ type RegisterUser struct {
 	Username        string `json:"username" validate:"required,min=5,max=20,alphanum"`
 	FirstName       string `json:"first_name" validate:"required,min=3,max=30,alpha"`
 	LastName        string `json:"last_name" validate:"required,min=3,max=30,alpha"`
-	Address         string `json:"address" `
 	Email           string `json:"email" validate:"required,email"`
 	Password        string `json:"password" validate:"required,min=6"`
-	ConfirmPassword string `json:"confirm_password" validate:"required,min=6"`
+	ConfirmPassword string `json:"confirm_password" validate:"required,min=6,eqfield=Password"`
 	PhoneNumber     string `json:"phone_number" validate:"required"`
-	AddressID       *int   `json:"address_id"`
 }
 
 type LoginUser struct {
@@ -21,8 +19,6 @@ type UpdateUser struct {
 	Username    string `json:"username" validate:"required,min=5,max=20,alphanum"`
 	FirstName   string `json:"first_name" validate:"required,min=3,max=30,alpha"`
 	LastName    string `json:"last_name" validate:"required,min=3,max=30,alpha"`
-	Address     string `json:"address" `
 	Email       string `json:"email" validate:"required,email"`
 	PhoneNumber string `json:"phone_number" validate:"required"`
-	AddressID   *int   `json:"address_id"`
 }

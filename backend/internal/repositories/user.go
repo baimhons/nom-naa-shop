@@ -6,21 +6,17 @@ import (
 )
 
 type UserRepository interface {
-	SaveAddress(user *models.User) error
+	BaseRepository[models.User]
 }
 
 type userRepository struct {
+	BaseRepository[models.User]
 	DB *gorm.DB
 }
 
 func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepository{DB: db}
-}
-
-func (r *userRepository) SaveAddress(user *models.User) error {
-	return r.DB.Create(user).Error
-}
-
-func (r *userRepository) GetAllAddress(user *models.User) error {
-	return r.DB.Find(user).Error
+	return &userRepository{
+		BaseRepository: NewBaseRepository[models.User](db),
+		DB:             db,
+	}
 }

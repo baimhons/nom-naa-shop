@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/response"
+	"github.com/baimhons/nom-naa-shop.git/internal/models"
 	"github.com/baimhons/nom-naa-shop.git/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,6 +33,79 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 
 	return c.Status(statusCode).JSON(response.SuccessResponse{
 		Message: "User registered successfully",
+		Data:    user,
+	})
+}
+
+func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
+	req, ok := c.Locals("req").(request.LoginUser)
+	if !ok {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid request",
+		})
+	}
+
+	user, statusCode, err := h.userService.LoginUser(req)
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.Status(statusCode).JSON(response.SuccessResponse{
+		Message: "User logged in successfully",
+		Data:    user,
+	})
+}
+
+func (h *UserHandler) LogoutUser(c *fiber.Ctx) error {
+	userContext := c.Locals("userContext").(models.UserContext)
+
+	statusCode, err := h.userService.LogoutUser(userContext)
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.Status(statusCode).JSON(response.SuccessResponse{
+		Message: "User logged out successfully",
+	})
+}
+
+func (h *UserHandler) GetUserProfile(c *fiber.Ctx) error {
+	userContext := c.Locals("userContext").(models.UserContext)
+
+	user, statusCode, err := h.userService.GetUserProfile(userContext)
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.Status(statusCode).JSON(response.SuccessResponse{
+		Message: "User profile fetched successfully",
+		Data:    user,
+	})
+}
+
+func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
+	req, ok := c.Locals("req").(request.UpdateUser)
+	if !ok {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid request",
+		})
+	}
+
+	user, statusCode, err := h.userService.UpdateUser(req)
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.Status(statusCode).JSON(response.SuccessResponse{
+		Message: "User updated successfully",
 		Data:    user,
 	})
 }
