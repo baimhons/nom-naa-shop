@@ -12,7 +12,6 @@ import (
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
 	"github.com/baimhons/nom-naa-shop.git/internal/repositories"
 	"github.com/baimhons/nom-naa-shop.git/internal/utils"
-	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -22,26 +21,28 @@ type UserService interface {
 	LoginUser(req request.LoginUser) (resp response.SuccessResponse, statusCode int, err error)
 	LogoutUser(userContext models.UserContext) (statusCode int, err error)
 	GetUserProfile(userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error)
+	GetAllUsers() (resp response.SuccessResponse, statusCode int, err error)
 	UpdateUser(req request.UpdateUser) (resp response.SuccessResponse, statusCode int, err error)
 }
 
-type userService struct {
+type userServiceImpl struct {
 	userRepository repositories.UserRepository
-	redisClient    utils.RedisClient
+	redis          utils.RedisClient
 }
 
-func NewUserService(userRepository repositories.UserRepository, redisClient *redis.Client) UserService {
-	return &userService{
+func NewUserService(userRepository repositories.UserRepository, redis utils.RedisClient) UserService {
+	return &userServiceImpl{
 		userRepository: userRepository,
-		redisClient:    utils.NewRedisClient(redisClient),
+		redis:          redis,
 	}
 }
-func (us *userService) RegisterUser(req request.RegisterUser) (resp response.SuccessResponse, statusCode int, err error) {
+func (us *userServiceImpl) RegisterUser(req request.RegisterUser) (resp response.SuccessResponse, statusCode int, err error) {
 	user := models.User{
-		Username:  req.Username,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Email:     req.Email,
+		Username:    req.Username,
+		FirstName:   req.FirstName,
+		LastName:    req.LastName,
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -58,7 +59,7 @@ func (us *userService) RegisterUser(req request.RegisterUser) (resp response.Suc
 	return resp, http.StatusCreated, nil
 }
 
-func (us *userService) LoginUser(req request.LoginUser) (resp response.SuccessResponse, statusCode int, err error) {
+func (us *userServiceImpl) LoginUser(req request.LoginUser) (resp response.SuccessResponse, statusCode int, err error) {
 	user := models.User{}
 	if err := us.userRepository.GetBy("email", req.Email, &user); err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -99,16 +100,16 @@ func (us *userService) LoginUser(req request.LoginUser) (resp response.SuccessRe
 		return resp, http.StatusInternalServerError, err
 	}
 
-	if err := us.redisClient.Set(context.Background(), fmt.Sprintf("access_token:%s", user.ID), accessToken, accessTokenExp.Sub(timeNow)); err != nil {
+	if err := us.redis.Set(context.Background(), fmt.Sprintf("access_token:%s", user.ID), accessToken, accessTokenExp.Sub(timeNow)); err != nil {
 		return resp, http.StatusInternalServerError, err
 	}
 
-	if err := us.redisClient.Set(context.Background(), fmt.Sprintf("refresh_token:%s", user.ID), refreshToken, refreshTokenExp.Sub(timeNow)); err != nil {
+	if err := us.redis.Set(context.Background(), fmt.Sprintf("refresh_token:%s", user.ID), refreshToken, refreshTokenExp.Sub(timeNow)); err != nil {
 		return resp, http.StatusInternalServerError, err
 	}
 
 	return response.SuccessResponse{
-		Message: "User logged in successfully",
+		Message: "User logged in successfully!",
 		Data: response.LoginUserResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
@@ -116,19 +117,19 @@ func (us *userService) LoginUser(req request.LoginUser) (resp response.SuccessRe
 	}, http.StatusOK, nil
 }
 
-func (us *userService) LogoutUser(userContext models.UserContext) (statusCode int, err error) {
-	if err := us.redisClient.Del(context.Background(), fmt.Sprintf("access_token:%s", userContext.ID)); err != nil {
+func (us *userServiceImpl) LogoutUser(userContext models.UserContext) (statusCode int, err error) {
+	if err := us.redis.Del(context.Background(), fmt.Sprintf("access_token:%s", userContext.ID)); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if err := us.redisClient.Del(context.Background(), fmt.Sprintf("refresh_token:%s", userContext.ID)); err != nil {
+	if err := us.redis.Del(context.Background(), fmt.Sprintf("refresh_token:%s", userContext.ID)); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
 	return http.StatusOK, nil
 }
 
-func (us *userService) GetUserProfile(userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error) {
+func (us *userServiceImpl) GetUserProfile(userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error) {
 	user := models.User{}
 	if err := us.userRepository.GetBy("id", userContext.ID, &user); err != nil {
 		return resp, http.StatusInternalServerError, err
@@ -137,6 +138,7 @@ func (us *userService) GetUserProfile(userContext models.UserContext) (resp resp
 	return response.SuccessResponse{
 		Message: "User fetched successfully",
 		Data: response.UserProfileResponse{
+			ID:          user.ID,
 			Username:    user.Username,
 			Email:       user.Email,
 			PhoneNumber: user.PhoneNumber,
@@ -146,7 +148,19 @@ func (us *userService) GetUserProfile(userContext models.UserContext) (resp resp
 	}, http.StatusOK, nil
 }
 
-func (us *userService) UpdateUser(req request.UpdateUser) (resp response.SuccessResponse, statusCode int, err error) {
+func (us *userServiceImpl) GetAllUsers() (resp response.SuccessResponse, statusCode int, err error) {
+	users := []models.User{}
+	if err := us.userRepository.GetAll(&users, nil); err != nil {
+		return resp, http.StatusInternalServerError, err
+	}
+
+	return response.SuccessResponse{
+		Message: "Users fetched successfully",
+		Data:    users,
+	}, http.StatusOK, nil
+}
+
+func (us *userServiceImpl) UpdateUser(req request.UpdateUser) (resp response.SuccessResponse, statusCode int, err error) {
 	user := models.User{}
 	if err := us.userRepository.GetBy("email", req.Email, &user); err != nil {
 		return resp, http.StatusInternalServerError, err

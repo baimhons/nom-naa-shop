@@ -6,5 +6,4 @@ type Districts struct {
 	DistrictCode int    `json:"district_code"`
 	NameEN       string `json:"district_name_en"`
 	NameTH       string `json:"district_name_th"`
-	PostalCode   int    `json:"postal_code"`
 }

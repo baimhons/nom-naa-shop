@@ -12,39 +12,43 @@ import (
 
 type jsonProvince struct {
 	ID     int    `json:"id"`
+	Code   int    `json:"province_code"`
 	NameTH string `json:"name_th"`
 	NameEN string `json:"name_en"`
 }
 
 type jsonDistrict struct {
-	ID         int    `json:"id"`
-	ProvinceID int    `json:"province_id"`
-	NameTH     string `json:"name_th"`
-	NameEN     string `json:"name_en"`
+	ID           int    `json:"id"`
+	Code         int    `json:"district_code"`
+	ProvinceCode int    `json:"province_code"`
+	NameTH       string `json:"name_th"`
+	NameEN       string `json:"name_en"`
 }
 
 type jsonSubDistrict struct {
-	ID         int    `json:"id"`
-	DistrictID int    `json:"district_id"`
-	NameTH     string `json:"name_th"`
-	NameEN     string `json:"name_en"`
-	PostalCode int    `json:"postal_code"`
+	ID           int    `json:"id"`
+	Code         int    `json:"sub_district_code"`
+	ProvinceCode int    `json:"province_code"`
+	DistrictCode int    `json:"district_code"`
+	NameTH       string `json:"name_th"`
+	NameEN       string `json:"name_en"`
+	PostalCode   int    `json:"postal_code"`
 }
 
 func SeedData(db *gorm.DB) {
-	provinceFile, err := os.Open("data/address/provinces.json")
+	provinceFile, err := os.Open("../internal/data/address/provinces.json")
 	if err != nil {
 		log.Fatalf("failed to open province file: %v", err)
 	}
 	defer provinceFile.Close()
 
-	districtFile, err := os.Open("data/address/districts.json")
+	districtFile, err := os.Open("../internal/data/address/districts.json")
 	if err != nil {
 		log.Fatalf("failed to open district file: %v", err)
 	}
 	defer districtFile.Close()
 
-	subDistrictFile, err := os.Open("data/address/sub_districts.json")
+	subDistrictFile, err := os.Open("../internal/data/address/sub_districts.json")
 	if err != nil {
 		log.Fatalf("failed to open subdistrict file: %v", err)
 	}
@@ -89,6 +93,27 @@ func SeedData(db *gorm.DB) {
 	}
 
 	for _, province := range provinces {
-		db.Create(&models.Province{ID: province.ID, NameTH: province.NameTH, NameEN: province.NameEN})
+		db.Create(&models.Province{ID: province.ID,
+			NameTH: province.NameTH,
+			NameEN: province.NameEN})
 	}
+
+	for _, district := range districts {
+		db.Create(&models.Districts{ID: district.ID,
+			DistrictCode: district.Code,
+			ProvinceCode: district.ProvinceCode,
+			NameTH:       district.NameTH,
+			NameEN:       district.NameEN})
+	}
+
+	for _, subDistrict := range subDistricts {
+		db.Create(&models.SubDistricts{ID: subDistrict.ID,
+			SubDistrictCode: subDistrict.Code,
+			ProvinceCode:    subDistrict.ProvinceCode,
+			DistrictCode:    subDistrict.DistrictCode,
+			NameTH:          subDistrict.NameTH,
+			NameEN:          subDistrict.NameEN,
+			PostalCode:      subDistrict.PostalCode})
+	}
+
 }

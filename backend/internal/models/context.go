@@ -1,10 +1,13 @@
 package models
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type UserContext struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	ID       string `gorm:"id"`
+	Username string `gorm:"username"`
+	Email    string `gorm:"email"`
+	Role     string `gorm:"role"`
 	jwt.RegisteredClaims
 }

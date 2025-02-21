@@ -1,9 +1,15 @@
 package main
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/baimhons/nom-naa-shop.git/internal/initial"
+)
 
 func main() {
-	app := fiber.New()
+	app := initial.InitializeApp()
 
-	app.Listen(":8080")
+	app.SetUpMiddlewares()
+
+	app.SetUpRoutes()
+
+	app.Run()
 }

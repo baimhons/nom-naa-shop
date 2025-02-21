@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
@@ -8,23 +9,38 @@ import (
 	"gorm.io/gorm"
 )
 
-func ConnectDB() {
-	dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
+func ConnectDB() *gorm.DB {
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+		"localhost", "postgres", "root", "postgres", "5432",
+	)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Fatalf("connect to database failure : %v\n", err)
 	}
 
+	// scripts.SeedData(db)
+
 	autoMigrate(db)
 
 	log.Println("connect to database successfully")
 
+	return db
 }
 
 func autoMigrate(db *gorm.DB) {
 	if err := db.AutoMigrate(
 		&models.BaseModel{},
+		&models.User{},
+		&models.Snack{},
+		&models.Order{},
+		&models.Payment{},
+		&models.Review{},
+		&models.Cart{},
+		&models.Item{},
+		&models.Address{},
 	); err != nil {
 		log.Fatalf("auto migrate failure : %v\n", err)
 	}

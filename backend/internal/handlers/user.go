@@ -89,6 +89,19 @@ func (h *UserHandler) GetUserProfile(c *fiber.Ctx) error {
 	})
 }
 
+func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
+	users, statusCode, err := h.userService.GetAllUsers()
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.Status(statusCode).JSON(response.SuccessResponse{
+		Message: "Users fetched successfully",
+		Data:    users,
+	})
+}
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	req, ok := c.Locals("req").(request.UpdateUser)
 	if !ok {

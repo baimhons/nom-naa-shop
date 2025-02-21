@@ -10,7 +10,7 @@ import (
 
 func ConnectRedis() *redis.Client {
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", ENV.REDIS_HOST, ENV.REDIS_PORT),
+		Addr:     fmt.Sprintf("%s:%s", "localhost", "6379"),
 		Password: "",
 		DB:       0,
 	})

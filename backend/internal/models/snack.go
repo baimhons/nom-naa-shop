@@ -6,7 +6,7 @@ type Snack struct {
 	Price       float64  `gorm:"not null"`
 	Quantity    int      `gorm:"not null"`
 	Type        string   `gorm:"not null"`
-	Image       []byte   `gorm:"image;type:blob"`
+	Image       []byte   `gorm:"type:bytea"`
 	Description string   `gorm:"not null"`
 	Reviews     []Review `gorm:"foreignKey:SnackID"`
 }

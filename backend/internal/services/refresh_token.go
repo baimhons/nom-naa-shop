@@ -19,19 +19,19 @@ type RefreshTokenService interface {
 	RefreshToken(userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error)
 }
 
-type refreshTokenService struct {
+type refreshTokenServiceImpl struct {
 	userRepository repositories.UserRepository
 	redisClient    *redis.Client
 }
 
 func NewRefreshTokenService(userRepository repositories.UserRepository, redisClient *redis.Client) RefreshTokenService {
-	return &refreshTokenService{
+	return &refreshTokenServiceImpl{
 		userRepository: userRepository,
 		redisClient:    redisClient,
 	}
 }
 
-func (as *refreshTokenService) RefreshToken(userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error) {
+func (as *refreshTokenServiceImpl) RefreshToken(userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error) {
 	user := models.User{}
 	if err := as.userRepository.GetBy("email", userContext.Email, &user); err != nil {
 		if err == gorm.ErrRecordNotFound {
