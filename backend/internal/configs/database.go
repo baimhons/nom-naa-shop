@@ -31,6 +31,7 @@ func ConnectDB() *gorm.DB {
 }
 
 func autoMigrate(db *gorm.DB) {
+	initalAdmin(db)
 	if err := db.AutoMigrate(
 		&models.BaseModel{},
 		&models.User{},
@@ -43,5 +44,23 @@ func autoMigrate(db *gorm.DB) {
 		&models.Address{},
 	); err != nil {
 		log.Fatalf("auto migrate failure : %v\n", err)
+	}
+}
+
+func initalAdmin(db *gorm.DB) {
+	// Check if any user with the role "admin" exists
+	var adminCount int64
+	db.Model(&models.User{}).Where("role = ?", "admin").Count(&adminCount)
+
+	if adminCount == 0 {
+		admin := models.User{
+			Username:    "admin",
+			Password:    "4dm1n",
+			Role:        "admin",
+			Email:       "admin@gmail.com",
+			PhoneNumber: "081234567890",
+		}
+
+		db.Create(&admin)
 	}
 }
