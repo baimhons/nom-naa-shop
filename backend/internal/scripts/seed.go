@@ -94,13 +94,14 @@ func SeedData(db *gorm.DB) {
 
 	for _, province := range provinces {
 		db.Create(&models.Province{ID: province.ID,
+			Code:   province.Code,
 			NameTH: province.NameTH,
 			NameEN: province.NameEN})
 	}
 
 	for _, district := range districts {
 		db.Create(&models.Districts{ID: district.ID,
-			DistrictCode: district.Code,
+			Code:         district.Code,
 			ProvinceCode: district.ProvinceCode,
 			NameTH:       district.NameTH,
 			NameEN:       district.NameEN})
@@ -108,12 +109,12 @@ func SeedData(db *gorm.DB) {
 
 	for _, subDistrict := range subDistricts {
 		db.Create(&models.SubDistricts{ID: subDistrict.ID,
-			SubDistrictCode: subDistrict.Code,
-			ProvinceCode:    subDistrict.ProvinceCode,
-			DistrictCode:    subDistrict.DistrictCode,
-			NameTH:          subDistrict.NameTH,
-			NameEN:          subDistrict.NameEN,
-			PostalCode:      subDistrict.PostalCode})
+			Code:         subDistrict.Code,
+			ProvinceCode: subDistrict.ProvinceCode,
+			DistrictCode: subDistrict.DistrictCode,
+			NameTH:       subDistrict.NameTH,
+			NameEN:       subDistrict.NameEN,
+			PostalCode:   subDistrict.PostalCode})
 	}
 
 }

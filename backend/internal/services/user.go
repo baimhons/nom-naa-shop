@@ -37,12 +37,23 @@ func NewUserService(userRepository repositories.UserRepository, redis utils.Redi
 	}
 }
 func (us *userServiceImpl) RegisterUser(req request.RegisterUser) (resp response.SuccessResponse, statusCode int, err error) {
-	user := models.User{
+	user := models.User{}
+
+	if err := us.userRepository.GetBy("email", req.Email, &user); err == nil {
+		return resp, http.StatusConflict, errors.New("email already exists")
+	}
+
+	if err := us.userRepository.GetBy("username", req.Username, &user); err == nil {
+		return resp, http.StatusConflict, errors.New("username already exists")
+	}
+
+	newUser := models.User{
 		Username:    req.Username,
 		FirstName:   req.FirstName,
 		LastName:    req.LastName,
 		Email:       req.Email,
 		PhoneNumber: req.PhoneNumber,
+		Role:        "user",
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -50,13 +61,16 @@ func (us *userServiceImpl) RegisterUser(req request.RegisterUser) (resp response
 		return resp, http.StatusInternalServerError, err
 	}
 
-	user.Password = string(hashPassword)
+	newUser.Password = string(hashPassword)
 
-	if err := us.userRepository.Create(&user); err != nil {
+	if err := us.userRepository.Create(&newUser); err != nil {
 		return resp, http.StatusInternalServerError, err
 	}
 
-	return resp, http.StatusCreated, nil
+	return response.SuccessResponse{
+		Message: "User registered successfully!",
+		Data:    nil,
+	}, http.StatusCreated, nil
 }
 
 func (us *userServiceImpl) LoginUser(req request.LoginUser) (resp response.SuccessResponse, statusCode int, err error) {

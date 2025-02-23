@@ -5,22 +5,16 @@ import (
 )
 
 type CreateAddressRequest struct {
-	Street        string `json:"street" validate:"required"`
-	ProvinceID    int    `json:"province_id" validate:"required"`
-	DistrictID    int    `json:"district_id" validate:"required"`
-	SubDistrictID int    `json:"sub_district_id" validate:"required"`
-	PostalCode    int    `json:"postal_code" validate:"required"`
-	AddressDetail string `json:"address_detail"`
-	UserID        string `json:"user_id" validate:"required"` // Assuming you have UserID
+	ProvinceCode    int    `json:"province_code" validate:"required"`
+	DistrictCode    int    `json:"district_code" validate:"required"`
+	SubDistrictCode int    `json:"sub_district_code" validate:"required"`
+	AddressDetail   string `json:"address_detail"`
 }
 
 type UpdateAddressRequest struct {
-	ID            uuid.UUID `json:"id,omitempty"` // For updating an existing address
-	Street        string    `json:"street" validate:"required"`
-	ProvinceID    int       `json:"province_id" validate:"required"`
-	DistrictID    int       `json:"district_id" validate:"required"`
-	SubDistrictID int       `json:"sub_district_id" validate:"required"`
-	PostalCode    int       `json:"postal_code" validate:"required"`
-	AddressDetail string    `json:"address_detail"`
-	UserID        uuid.UUID `json:"user_id" validate:"required"` // Assuming you have UserID
+	ID              uuid.UUID `json:"id,omitempty"` // For updating an existing address
+	ProvinceCode    int       `json:"province_code" validate:"required"`
+	DistrictCode    int       `json:"district_code" validate:"required"`
+	SubDistrictCode int       `json:"sub_district_code" validate:"required"`
+	AddressDetail   string    `json:"address_detail"`
 }

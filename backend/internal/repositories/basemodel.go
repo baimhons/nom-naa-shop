@@ -2,13 +2,14 @@ package repositories
 
 import (
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type BaseRepository[T any] interface {
 	GetAll(items *[]T, pagination *request.PaginationQuery) error
 	GetBy(field string, value string, item *T) error
-	GetByID(item *T, id string) error
+	GetByID(item *T, id uuid.UUID) error
 	Create(item *T) error
 	Update(item *T) error
 	Delete(item *T) error
@@ -42,7 +43,7 @@ func (r *baseRepository[T]) GetBy(field string, value string, item *T) error {
 	return r.DB.Where(field+" = ?", value).First(item).Error
 }
 
-func (r *baseRepository[T]) GetByID(item *T, id string) error {
+func (r *baseRepository[T]) GetByID(item *T, id uuid.UUID) error {
 	return r.DB.Where("id = ?", id).First(item).Error
 }
 

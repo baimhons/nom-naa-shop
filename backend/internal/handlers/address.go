@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/response"
+	"github.com/baimhons/nom-naa-shop.git/internal/models"
 	"github.com/baimhons/nom-naa-shop.git/internal/services"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type AddressHandler struct {
@@ -19,15 +20,15 @@ func NewAddressHandler(addressService services.AddressService) *AddressHandler {
 }
 
 func (h *AddressHandler) GetProvince(c *fiber.Ctx) error {
-	provinceID := c.Params("province_id")
+	provinceCode := c.Params("province_code")
 	// Convert string ID to int since GetProvinceByID expects an int
-	provinceIDInt, err := strconv.Atoi(provinceID)
+	provinceCodeInt, err := strconv.Atoi(provinceCode)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
 			Message: "Invalid province ID",
 		})
 	}
-	province, err := h.addressService.GetProvinceByID(provinceIDInt)
+	province, err := h.addressService.GetProvinceByCode(provinceCodeInt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
 			Message: "Failed to get province",
@@ -41,15 +42,15 @@ func (h *AddressHandler) GetProvince(c *fiber.Ctx) error {
 }
 
 func (h *AddressHandler) GetDistrict(c *fiber.Ctx) error {
-	districtID := c.Params("district_id")
+	districtCode := c.Params("district_code")
 	// Convert string ID to int since GetDistrictByID expects an int
-	districtIDInt, err := strconv.Atoi(districtID)
+	districtCodeInt, err := strconv.Atoi(districtCode)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
 			Message: "Invalid district ID",
 		})
 	}
-	district, err := h.addressService.GetDistrictByID(districtIDInt)
+	district, err := h.addressService.GetDistrictByCode(districtCodeInt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
 			Message: "Failed to get district",
@@ -63,15 +64,15 @@ func (h *AddressHandler) GetDistrict(c *fiber.Ctx) error {
 }
 
 func (h *AddressHandler) GetSubDistrict(c *fiber.Ctx) error {
-	subDistrictID := c.Params("sub_district_id")
+	subDistrictCode := c.Params("sub_district_code")
 	// Convert string ID to int since GetSubDistrictByID expects an int
-	subDistrictIDInt, err := strconv.Atoi(subDistrictID)
+	subDistrictCodeInt, err := strconv.Atoi(subDistrictCode)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
 			Message: "Invalid sub district ID",
 		})
 	}
-	subDistrict, err := h.addressService.GetSubDistrictByID(subDistrictIDInt)
+	subDistrict, err := h.addressService.GetSubDistrictByCode(subDistrictCodeInt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
 			Message: "Failed to get sub district",
@@ -85,39 +86,166 @@ func (h *AddressHandler) GetSubDistrict(c *fiber.Ctx) error {
 }
 
 func (h *AddressHandler) CreateAddress(c *fiber.Ctx) error {
-	req, ok := c.Locals("req").(request.CreateAddressRequest)
+	userContext := c.Locals("userContext").(models.UserContext)
+	if userContext.ID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Unauthorized user",
+		})
+	}
 
-	if !ok {
-		log.Println("Failed to parse request:", c.Locals("req"))
+	var req request.CreateAddressRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
 			Message: "Invalid request",
 		})
 	}
 
-	address, err := h.addressService.CreateAddress(req)
+	address, err := h.addressService.CreateAddress(req, userContext)
 	if err != nil {
-		log.Println("Error creating address:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
-			Message: "Failed to create address",
+			Message: err.Error(),
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(response.SuccessResponse{
-		Message: "Address created successfully",
+	return c.Status(fiber.StatusCreated).JSON(address)
+}
+
+func (h *AddressHandler) UpdateAddress(c *fiber.Ctx) error {
+	userContext := c.Locals("userContext").(models.UserContext)
+	if userContext.ID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Unauthorized user",
+		})
+	}
+
+	var req request.UpdateAddressRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid request",
+		})
+	}
+
+	address, err := h.addressService.UpdateAddress(req, userContext)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(address)
+}
+
+func (h *AddressHandler) DeleteAddress(c *fiber.Ctx) error {
+
+	userContext := c.Locals("userContext").(models.UserContext)
+	if userContext.ID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Unauthorized user",
+		})
+	}
+
+	addressID := c.Params("id")
+	addressIDUUID, err := uuid.Parse(addressID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid address ID",
+		})
+	}
+
+	err = h.addressService.DeleteAddress(addressIDUUID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Message: "Failed to delete address",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.SuccessResponse{
+		Message: "Address deleted successfully",
+	})
+}
+
+func (h *AddressHandler) GetAllAddress(c *fiber.Ctx) error {
+	userContext, ok := c.Locals("userContext").(models.UserContext)
+	if !ok || userContext.ID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Unauthorized user",
+		})
+	}
+
+	// Convert userContext.ID to UUID properly
+	userUUID, err := uuid.Parse(userContext.ID)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Invalid user context",
+		})
+	}
+
+	addresses, err := h.addressService.GetAllAddressByUserID(userUUID, userContext)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Message: "Failed to get addresses",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.SuccessResponse{
+		Message: "Addresses fetched successfully",
+		Data:    addresses,
+	})
+}
+
+func (h *AddressHandler) GetAddressByID(c *fiber.Ctx) error {
+	userContext := c.Locals("userContext").(models.UserContext)
+	if userContext.ID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Unauthorized user",
+		})
+	}
+
+	addressID := c.Params("id")
+	addressIDUUID, err := uuid.Parse(addressID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid address ID",
+		})
+	}
+
+	address, err := h.addressService.GetAddressByID(addressIDUUID, userContext)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Message: "Failed to get address",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.SuccessResponse{
+		Message: "Address fetched successfully",
 		Data:    address,
 	})
 }
 
-func (h *AddressHandler) GetAllDistrictsByProvinceID(c *fiber.Ctx) error {
-	provinceID := c.Params("province_id")
-	provinceIDInt, err := strconv.Atoi(provinceID)
+func (h *AddressHandler) GetAllProvinces(c *fiber.Ctx) error {
+	provinces, err := h.addressService.GetAllProvince()
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: "Invalid province ID",
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Message: "Failed to get provinces",
 		})
 	}
 
-	districts, err := h.addressService.GetAllDistrictsByProvinceID(provinceIDInt)
+	return c.Status(fiber.StatusOK).JSON(response.SuccessResponse{
+		Message: "Provinces fetched successfully",
+		Data:    provinces,
+	})
+}
+
+func (h *AddressHandler) GetAllDistrictsByProvinceCode(c *fiber.Ctx) error {
+	provinceCode := c.Params("province_code")
+	provinceCodeInt, err := strconv.Atoi(provinceCode)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid province code",
+		})
+	}
+
+	districts, err := h.addressService.GetAllDistrictsByProvinceCode(provinceCodeInt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
 			Message: "Failed to get districts",
@@ -130,16 +258,16 @@ func (h *AddressHandler) GetAllDistrictsByProvinceID(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AddressHandler) GetAllSubDistrictsByDistrictID(c *fiber.Ctx) error {
-	districtID := c.Params("district_id")
-	districtIDInt, err := strconv.Atoi(districtID)
+func (h *AddressHandler) GetAllSubDistrictsByDistrictCode(c *fiber.Ctx) error {
+	districtCode := c.Params("district_code")
+	districtCodeInt, err := strconv.Atoi(districtCode)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: "Invalid district ID",
+			Message: "Invalid district code",
 		})
 	}
 
-	subDistricts, err := h.addressService.GetAllSubDistrictsByDistrictID(districtIDInt)
+	subDistricts, err := h.addressService.GetAllSubDistrictsByDistrictCode(districtCodeInt)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
 			Message: "Failed to get sub districts",

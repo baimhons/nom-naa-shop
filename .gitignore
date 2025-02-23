@@ -23,7 +23,7 @@ go.work.sum
 
 
 # .env file for deployment
-deployment/.env
+deployment/env.env
 
 # .env file for internal
-internal/.env
+internal/configs/env.go

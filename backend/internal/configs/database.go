@@ -12,7 +12,7 @@ import (
 func ConnectDB() *gorm.DB {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
-		"localhost", "postgres", "root", "postgres", "5432",
+		ENV.DB_HOST, ENV.DB_USER, ENV.DB_PASSWORD, ENV.DB_NAME, ENV.DB_PORT,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})

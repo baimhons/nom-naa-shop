@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
@@ -11,18 +12,20 @@ import (
 )
 
 type AddressService interface {
-	CreateAddress(req request.CreateAddressRequest) (models.Address, error)
-	UpdateAddress(req request.UpdateAddressRequest) (models.Address, error)
+	CreateAddress(req request.CreateAddressRequest, userContext models.UserContext) (models.Address, error)
+	UpdateAddress(req request.UpdateAddressRequest, userContext models.UserContext) (models.Address, error)
 	DeleteAddress(addressID uuid.UUID) error
-	GetAddressByID(addressID uuid.UUID) (models.Address, error)
-	GetAllAddressByUserID(userID uuid.UUID) ([]models.Address, error)
+	GetAddressByID(addressID uuid.UUID, userContext models.UserContext) (models.Address, error)
+	GetAllAddressByUserID(userID uuid.UUID, userContext models.UserContext) ([]models.Address, error)
 
 	// Add region lookups
-	GetProvinceByID(provinceID int) (addressModel.Province, error)
-	GetDistrictByID(districtID int) (addressModel.Districts, error)
-	GetSubDistrictByID(subDistrictID int) (addressModel.SubDistricts, error)
-	GetAllDistrictsByProvinceID(provinceID int) ([]addressModel.Districts, error)
-	GetAllSubDistrictsByDistrictID(districtID int) ([]addressModel.SubDistricts, error)
+	GetProvinceByCode(provinceCode int) (addressModel.Province, error)
+	GetDistrictByCode(districtCode int) (addressModel.Districts, error)
+	GetSubDistrictByCode(subDistrictCode int) (addressModel.SubDistricts, error)
+	GetAllProvince() ([]addressModel.Province, error)
+	GetAllDistrictsByProvinceCode(provinceCode int) ([]addressModel.Districts, error)
+	GetAllSubDistrictsByDistrictCode(districtCode int) ([]addressModel.SubDistricts, error)
+	GetPostalCode(subDistrictCode int) (int, error)
 }
 
 type addressServiceImpl struct {
@@ -46,40 +49,71 @@ func NewAddressService(
 	}
 }
 
-func (as *addressServiceImpl) GetProvinceByID(provinceID int) (addressModel.Province, error) {
+func (as *addressServiceImpl) GetProvinceByCode(provinceCode int) (addressModel.Province, error) {
 	var province addressModel.Province
-	if err := as.provinceRepo.GetByID(provinceID, &province); err != nil {
+	if err := as.provinceRepo.GetByCode(provinceCode, &province); err != nil {
 		return addressModel.Province{}, err
 	}
 	return province, nil
 }
 
-func (as *addressServiceImpl) GetDistrictByID(districtID int) (addressModel.Districts, error) {
+func (as *addressServiceImpl) GetDistrictByCode(districtCode int) (addressModel.Districts, error) {
 	var district addressModel.Districts
-	if err := as.districtRepo.GetByID(districtID, &district); err != nil {
+	if err := as.districtRepo.GetByCode(districtCode, &district); err != nil {
 		return addressModel.Districts{}, err
 	}
 	return district, nil
 }
 
-func (as *addressServiceImpl) GetSubDistrictByID(subDistrictID int) (addressModel.SubDistricts, error) {
+func (as *addressServiceImpl) GetSubDistrictByCode(subDistrictCode int) (addressModel.SubDistricts, error) {
 	var subDistrict addressModel.SubDistricts
-	if err := as.subDistrictRepo.GetByID(subDistrictID, &subDistrict); err != nil {
+	if err := as.subDistrictRepo.GetByCode(subDistrictCode, &subDistrict); err != nil {
 		return addressModel.SubDistricts{}, err
 	}
 	return subDistrict, nil
 }
 
-func (as *addressServiceImpl) CreateAddress(req request.CreateAddressRequest) (models.Address, error) {
-	address := models.Address{
-		Street:        req.Street,
-		ProvinceID:    req.ProvinceID,
-		DistrictID:    req.DistrictID,
-		SubDistrictID: req.SubDistrictID,
-		PostalCode:    req.PostalCode,
-		AddressDetail: req.AddressDetail,
-		UserID:        uuid.MustParse(req.UserID),
+func (as *addressServiceImpl) CreateAddress(req request.CreateAddressRequest, userContext models.UserContext) (models.Address, error) {
+	if userContext.ID == "" {
+		return models.Address{}, fmt.Errorf("unauthorized user")
 	}
+
+	userUUID, err := uuid.Parse(userContext.ID)
+	if err != nil {
+		return models.Address{}, fmt.Errorf("invalid user context")
+	}
+
+	address := models.Address{
+		ProvinceCode:    req.ProvinceCode,
+		DistrictCode:    req.DistrictCode,
+		SubDistrictCode: req.SubDistrictCode,
+		AddressDetail:   req.AddressDetail,
+		UserID:          userUUID,
+	}
+
+	provinceNameTH, err := as.GetNameProvince(address.ProvinceCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.ProvinceNameTH = provinceNameTH
+
+	districtNameTH, err := as.GetNameDistrict(address.DistrictCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.DistrictNameTH = districtNameTH
+
+	subDistrictNameTH, err := as.GetNameSubDistrict(address.SubDistrictCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.SubDistrictNameTH = subDistrictNameTH
+
+	postalCode, err := as.GetPostalCode(address.SubDistrictCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.PostalCode = postalCode
 
 	if err := as.addressRepository.Create(&address); err != nil {
 		return models.Address{}, err
@@ -88,18 +122,51 @@ func (as *addressServiceImpl) CreateAddress(req request.CreateAddressRequest) (m
 	return address, nil
 }
 
-func (as *addressServiceImpl) UpdateAddress(req request.UpdateAddressRequest) (models.Address, error) {
+func (as *addressServiceImpl) UpdateAddress(req request.UpdateAddressRequest, userContext models.UserContext) (models.Address, error) {
+	if userContext.ID == "" {
+		return models.Address{}, fmt.Errorf("unauthorized user")
+	}
+
+	userUUID, err := uuid.Parse(userContext.ID)
+	if err != nil {
+		return models.Address{}, fmt.Errorf("invalid user context")
+	}
+
 	address := models.Address{
 		BaseModel: models.BaseModel{
 			ID:       req.ID,
 			UpdateAt: time.Now(),
 		},
-		ProvinceID:    req.ProvinceID,
-		DistrictID:    req.DistrictID,
-		SubDistrictID: req.SubDistrictID,
-		PostalCode:    req.PostalCode,
-		AddressDetail: req.AddressDetail,
+		ProvinceCode:    req.ProvinceCode,
+		DistrictCode:    req.DistrictCode,
+		SubDistrictCode: req.SubDistrictCode,
+		AddressDetail:   req.AddressDetail,
+		UserID:          userUUID,
 	}
+
+	provinceNameTH, err := as.GetNameProvince(address.ProvinceCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.ProvinceNameTH = provinceNameTH
+
+	districtNameTH, err := as.GetNameDistrict(address.DistrictCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.DistrictNameTH = districtNameTH
+
+	subDistrictNameTH, err := as.GetNameSubDistrict(address.SubDistrictCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.SubDistrictNameTH = subDistrictNameTH
+
+	postalCode, err := as.GetPostalCode(address.SubDistrictCode)
+	if err != nil {
+		return models.Address{}, err
+	}
+	address.PostalCode = postalCode
 
 	if err := as.addressRepository.Update(&address); err != nil {
 		return models.Address{}, err
@@ -117,15 +184,32 @@ func (as *addressServiceImpl) DeleteAddress(addressID uuid.UUID) error {
 	return as.addressRepository.Delete(&address)
 }
 
-func (as *addressServiceImpl) GetAddressByID(addressID uuid.UUID) (models.Address, error) {
+func (as *addressServiceImpl) GetAddressByID(addressID uuid.UUID, userContext models.UserContext) (models.Address, error) {
+	if userContext.ID == "" {
+		return models.Address{}, fmt.Errorf("unauthorized user")
+	}
+
 	var address models.Address
-	if err := as.addressRepository.GetByID(&address, addressID.String()); err != nil {
+	if err := as.addressRepository.GetByID(&address, addressID); err != nil {
 		return models.Address{}, err
 	}
 	return address, nil
 }
 
-func (as *addressServiceImpl) GetAllAddressByUserID(userID uuid.UUID) ([]models.Address, error) {
+func (as *addressServiceImpl) GetAllAddressByUserID(userID uuid.UUID, userContext models.UserContext) ([]models.Address, error) {
+	if userContext.ID == "" {
+		return nil, fmt.Errorf("unauthorized user")
+	}
+
+	userUUID, err := uuid.Parse(userContext.ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user context")
+	}
+
+	if userUUID != userID {
+		return nil, fmt.Errorf("unauthorized user")
+	}
+
 	var addresses []models.Address
 	if err := as.addressRepository.GetAllByUserID(userID, &addresses); err != nil {
 		return nil, err
@@ -133,18 +217,58 @@ func (as *addressServiceImpl) GetAllAddressByUserID(userID uuid.UUID) ([]models.
 	return addresses, nil
 }
 
-func (as *addressServiceImpl) GetAllDistrictsByProvinceID(provinceCode int) ([]addressModel.Districts, error) {
+func (as *addressServiceImpl) GetNameProvince(provinceCode int) (string, error) {
+	province, err := as.GetProvinceByCode(provinceCode)
+	if err != nil {
+		return "", err
+	}
+	return province.NameTH, nil
+}
+
+func (as *addressServiceImpl) GetNameDistrict(districtCode int) (string, error) {
+	district, err := as.GetDistrictByCode(districtCode)
+	if err != nil {
+		return "", err
+	}
+	return district.NameTH, nil
+}
+
+func (as *addressServiceImpl) GetNameSubDistrict(subDistrictCode int) (string, error) {
+	subDistrict, err := as.GetSubDistrictByCode(subDistrictCode)
+	if err != nil {
+		return "", err
+	}
+	return subDistrict.NameTH, nil
+}
+
+func (as *addressServiceImpl) GetAllProvince() ([]addressModel.Province, error) {
+	var provinces []addressModel.Province
+	if err := as.provinceRepo.GetAll(&provinces); err != nil {
+		return nil, err
+	}
+	return provinces, nil
+}
+
+func (as *addressServiceImpl) GetAllDistrictsByProvinceCode(provinceCode int) ([]addressModel.Districts, error) {
 	var districts []addressModel.Districts
-	if err := as.addressRepository.GetAllByProvinceCode(provinceCode, &districts); err != nil {
+	if err := as.addressRepository.GetAllDistrictsByProvinceCode(provinceCode, &districts); err != nil {
 		return nil, err
 	}
 	return districts, nil
 }
 
-func (as *addressServiceImpl) GetAllSubDistrictsByDistrictID(districtCode int) ([]addressModel.SubDistricts, error) {
+func (as *addressServiceImpl) GetAllSubDistrictsByDistrictCode(districtCode int) ([]addressModel.SubDistricts, error) {
 	var subDistricts []addressModel.SubDistricts
-	if err := as.addressRepository.GetAllByDistrictCode(districtCode, &subDistricts); err != nil {
+	if err := as.addressRepository.GetAllSubDistrictsByDistrictCode(districtCode, &subDistricts); err != nil {
 		return nil, err
 	}
 	return subDistricts, nil
+}
+
+func (as *addressServiceImpl) GetPostalCode(subDistrictCode int) (int, error) {
+	subDistrict, err := as.GetSubDistrictByCode(subDistrictCode)
+	if err != nil {
+		return 0, err
+	}
+	return subDistrict.PostalCode, nil
 }

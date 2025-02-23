@@ -34,6 +34,8 @@ type App struct {
 }
 
 func InitializeApp() *App {
+	Init()
+
 	app := fiber.New()
 	db := configs.ConnectDB()
 	redis := configs.ConnectRedis()
@@ -59,7 +61,7 @@ func InitializeApp() *App {
 	apiRoutes := app.Group("/api/v1")
 
 	userRoutes := routers.NewUserRountes(apiRoutes, userHandler, userValidate, authMiddleware)
-	addressRoutes := routers.NewAddressRouter(apiRoutes, addressHandler)
+	addressRoutes := routers.NewAddressRouter(apiRoutes, addressHandler, authMiddleware)
 
 	return &App{
 		App:   app,

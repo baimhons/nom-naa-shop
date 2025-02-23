@@ -37,3 +37,23 @@ func (v *AddressValidateImpl) ValidateCreateAddressRequest(c *fiber.Ctx) error {
 	c.Locals("req", req)
 	return c.Next()
 }
+
+func (v *AddressValidateImpl) ValidateUpdateAddressRequest(c *fiber.Ctx) error {
+	var req request.UpdateAddressRequest
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid request",
+		})
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	c.Locals("req", req)
+	return c.Next()
+}

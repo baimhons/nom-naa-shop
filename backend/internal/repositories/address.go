@@ -12,11 +12,11 @@ type AddressRepository interface {
 	GetAllByUserID(userID uuid.UUID, items *[]models.Address) error
 
 	// Add methods for province, districts, sub-districts
-	GetProvinceByID(provinceID int, province *addressModel.Province) error
-	GetDistrictByID(districtID int, district *addressModel.Districts) error
-	GetSubDistrictByID(subDistrictID int, subDistrict *addressModel.SubDistricts) error
-	GetAllByProvinceCode(provinceCode int, districts *[]addressModel.Districts) error
-	GetAllByDistrictCode(districtCode int, subDistricts *[]addressModel.SubDistricts) error
+	GetProvinceByCode(provinceCode int, province *addressModel.Province) error
+	GetDistrictByCode(districtCode int, district *addressModel.Districts) error
+	GetSubDistrictByCode(subDistrictCode int, subDistrict *addressModel.SubDistricts) error
+	GetAllDistrictsByProvinceCode(provinceCode int, districts *[]addressModel.Districts) error
+	GetAllSubDistrictsByDistrictCode(districtCode int, subDistricts *[]addressModel.SubDistricts) error
 }
 
 type addressRepository struct {
@@ -35,22 +35,22 @@ func (ar *addressRepository) GetAllByUserID(userID uuid.UUID, items *[]models.Ad
 	return ar.DB.Where("user_id = ?", userID).Find(items).Error
 }
 
-func (ar *addressRepository) GetProvinceByID(provinceID int, province *addressModel.Province) error {
-	return ar.DB.Where("id = ?", provinceID).First(province).Error
+func (ar *addressRepository) GetProvinceByCode(provinceCode int, province *addressModel.Province) error {
+	return ar.DB.Where("code = ?", provinceCode).First(province).Error
 }
 
-func (ar *addressRepository) GetDistrictByID(districtID int, district *addressModel.Districts) error {
-	return ar.DB.Where("id = ?", districtID).First(district).Error
+func (ar *addressRepository) GetDistrictByCode(districtCode int, district *addressModel.Districts) error {
+	return ar.DB.Where("code = ?", districtCode).First(district).Error
 }
 
-func (ar *addressRepository) GetSubDistrictByID(subDistrictID int, subDistrict *addressModel.SubDistricts) error {
-	return ar.DB.Where("id = ?", subDistrictID).First(subDistrict).Error
+func (ar *addressRepository) GetSubDistrictByCode(subDistrictCode int, subDistrict *addressModel.SubDistricts) error {
+	return ar.DB.Where("code = ?", subDistrictCode).First(subDistrict).Error
 }
 
-func (ar *addressRepository) GetAllByProvinceCode(provinceCode int, districts *[]addressModel.Districts) error {
+func (ar *addressRepository) GetAllDistrictsByProvinceCode(provinceCode int, districts *[]addressModel.Districts) error {
 	return ar.DB.Where("province_code = ?", provinceCode).Find(districts).Error
 }
 
-func (ar *addressRepository) GetAllByDistrictCode(districtCode int, subDistricts *[]addressModel.SubDistricts) error {
+func (ar *addressRepository) GetAllSubDistrictsByDistrictCode(districtCode int, subDistricts *[]addressModel.SubDistricts) error {
 	return ar.DB.Where("district_code = ?", districtCode).Find(subDistricts).Error
 }
