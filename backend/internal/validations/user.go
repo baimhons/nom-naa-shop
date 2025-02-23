@@ -5,7 +5,7 @@ import (
 
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/response"
-	"github.com/go-playground/validator/v10"
+	"github.com/baimhons/nom-naa-shop.git/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -24,20 +24,7 @@ func NewUserValidate() *UserValidateImpl {
 func (u *UserValidateImpl) ValidateRegisterUser(c *fiber.Ctx) error {
 	var req request.RegisterUser
 
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: err.Error(),
-			Error:   err,
-		})
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: err.Error(),
-			Error:   err,
-		})
-	}
+	validateCommonRequestBody(c, &req)
 
 	if req.Username == "admin" {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
@@ -52,20 +39,7 @@ func (u *UserValidateImpl) ValidateRegisterUser(c *fiber.Ctx) error {
 func (u *UserValidateImpl) ValidateLoginUser(c *fiber.Ctx) error {
 	var req request.LoginUser
 
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: err.Error(),
-			Error:   err,
-		})
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: err.Error(),
-			Error:   err,
-		})
-	}
+	validateCommonRequestBody(c, &req)
 
 	c.Locals("req", req)
 	return c.Next()
@@ -88,21 +62,25 @@ func (u *UserValidateImpl) ValidateGetUsersRequest(c *fiber.Ctx) error {
 func (u *UserValidateImpl) ValidateUpdateUser(c *fiber.Ctx) error {
 	var req request.UpdateUser
 
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: err.Error(),
-			Error:   err,
-		})
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Message: err.Error(),
-			Error:   err,
-		})
-	}
+	validateCommonRequestBody(c, &req)
 
 	c.Locals("req", req)
+	return c.Next()
+}
+
+func (u *UserValidateImpl) ValidateRoleAdmin(c *fiber.Ctx) error {
+	userContext, ok := c.Locals("userContext").(models.UserContext)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Unauthorized",
+		})
+	}
+
+	if userContext.Role != "admin" {
+		return c.Status(fiber.StatusForbidden).JSON(response.ErrorResponse{
+			Message: "Forbidden",
+		})
+	}
+
 	return c.Next()
 }

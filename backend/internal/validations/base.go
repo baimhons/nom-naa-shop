@@ -3,7 +3,11 @@ package validations
 import (
 	"errors"
 	"fmt"
+	"mime/multipart"
+	"reflect"
+	"strconv"
 
+	"github.com/baimhons/nom-naa-shop.git/internal/configs"
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -21,6 +25,33 @@ func validateCommonRequestBody[T any](c *fiber.Ctx, req *T) error {
 	return nil
 }
 
+func validateCommonRequestFormBody[T any](c *fiber.Ctx, req *T) error {
+	if err := c.BodyParser(req); err != nil {
+		return err
+	}
+
+	if err := validator.New().Struct(req); err != nil {
+		return err
+	}
+
+	if form, err := c.MultipartForm(); err == nil {
+		val := reflect.ValueOf(req).Elem()
+		typ := val.Type()
+
+		for i := 0; i < val.NumField(); i++ {
+			field := val.Field(i)
+			if field.Type() == reflect.TypeOf([]*multipart.FileHeader{}) {
+				formTag := typ.Field(i).Tag.Get("form")
+				if files := form.File[formTag]; files != nil {
+					field.Set(reflect.ValueOf(files))
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func validateCommonPaginationQuery(c *fiber.Ctx, req *request.PaginationQuery) error {
 	if err := c.QueryParser(req); err != nil {
 		return err
@@ -32,6 +63,30 @@ func validateCommonPaginationQuery(c *fiber.Ctx, req *request.PaginationQuery) e
 
 	if err := validateSortAndOrder(req.Sort, req.Order); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func validateImageFiles(files []*multipart.FileHeader) error {
+	maxFileSize := configs.ENV.MAX_FILE_SIZE
+
+	for _, file := range files {
+		if file.Size > 1024*1024*maxFileSize {
+			return errors.New("image file size must be less than " + strconv.FormatInt(maxFileSize, 10) + "MB")
+		}
+
+		if file.Size == 0 {
+			return errors.New("image file is required")
+		}
+
+		if file.Filename == "" {
+			return errors.New("image file name is required")
+		}
+
+		if file.Header.Get("content-type") != "image/jpeg" && file.Header.Get("content-type") != "image/png" && file.Header.Get("content-type") != "image/gif" {
+			return errors.New("image file must be a valid image")
+		}
 	}
 
 	return nil

@@ -62,5 +62,4 @@ func (r *AuthMiddleware) AuthToken(c *fiber.Ctx) error {
 
 	c.Locals("userContext", userContext)
 	return c.Next()
-
 }

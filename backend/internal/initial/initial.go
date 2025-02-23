@@ -44,15 +44,18 @@ func InitializeApp() *App {
 
 	userRepository := repositories.NewUserRepository(db)
 	addressRepository := repositories.NewAddressRepository(db)
+	snackRepository := repositories.NewSnackRepository(db)
 	provinceRepo := repositories.NewRegionRepository[addressModel.Province](db)
 	districtRepo := repositories.NewRegionRepository[addressModel.Districts](db)
 	subDistrictRepo := repositories.NewRegionRepository[addressModel.SubDistricts](db)
 
 	userService := services.NewUserService(userRepository, redisClient)
 	addressService := services.NewAddressService(addressRepository, provinceRepo, districtRepo, subDistrictRepo)
+	snackService := services.NewSnackService(snackRepository)
 
 	userHandler := handlers.NewUserHandler(userService)
 	addressHandler := handlers.NewAddressHandler(addressService)
+	snackHandler := handlers.NewSnackHandler(snackService)
 
 	userValidate := validations.NewUserValidate()
 
@@ -62,6 +65,7 @@ func InitializeApp() *App {
 
 	userRoutes := routers.NewUserRountes(apiRoutes, userHandler, userValidate, authMiddleware)
 	addressRoutes := routers.NewAddressRouter(apiRoutes, addressHandler, authMiddleware)
+	snackRoutes := routers.NewSnackRouter(apiRoutes, snackHandler, authMiddleware)
 
 	return &App{
 		App:   app,
@@ -70,6 +74,7 @@ func InitializeApp() *App {
 		routes: func() {
 			userRoutes.SetupRoutes()
 			addressRoutes.SetupRoutes()
+			snackRoutes.SetupRoutes()
 		},
 	}
 }

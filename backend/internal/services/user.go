@@ -96,7 +96,7 @@ func (us *userServiceImpl) LoginUser(req request.LoginUser) (resp response.Succe
 		"id":       user.ID,
 		"email":    user.Email,
 		"username": user.Username,
-		"exp":      accessTokenExp.Unix(),
+		"role":     user.Role,
 	}, accessTokenExp.Unix())
 
 	if err != nil {
@@ -107,7 +107,7 @@ func (us *userServiceImpl) LoginUser(req request.LoginUser) (resp response.Succe
 		"id":       user.ID,
 		"email":    user.Email,
 		"username": user.Username,
-		"exp":      refreshTokenExp.Unix(),
+		"role":     user.Role,
 	}, refreshTokenExp.Unix())
 
 	if err != nil {
