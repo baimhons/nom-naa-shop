@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
@@ -14,6 +16,8 @@ type SnackService interface {
 	CreateSnack(req request.CreateSnackRequest) (resp response.SuccessResponse, statusCode int, err error)
 	GetAllSnacks(querys request.PaginationQuery) (resp response.SuccessResponse, statusCode int, err error)
 	GetSnackByID(id uuid.UUID) (resp response.SuccessResponse, statusCode int, err error)
+	UpdateSnack(req request.UpdateSnackRequest, userContext models.UserContext, id uuid.UUID) (resp response.SuccessResponse, statusCode int, err error)
+	DeleteSnack(id uuid.UUID) (resp response.SuccessResponse, statusCode int, err error)
 }
 
 type snackServiceImpl struct {
@@ -62,5 +66,54 @@ func (s *snackServiceImpl) GetSnackByID(id uuid.UUID) (resp response.SuccessResp
 	return response.SuccessResponse{
 		Message: "Snack fetched successfully",
 		Data:    snack,
+	}, http.StatusOK, nil
+}
+
+func (s *snackServiceImpl) UpdateSnack(req request.UpdateSnackRequest, userContext models.UserContext, id uuid.UUID) (resp response.SuccessResponse, statusCode int, err error) {
+	if userContext.ID == "" {
+		return resp, http.StatusUnauthorized, fmt.Errorf("unauthorized user")
+	}
+
+	var existingSnack models.Snack
+	if err := s.snackRepository.GetByID(&existingSnack, id); err != nil {
+		return resp, http.StatusNotFound, fmt.Errorf("snack not found")
+	}
+
+	if req.Price != 0 {
+		existingSnack.Price = req.Price
+	}
+	if req.Quantity != 0 {
+		existingSnack.Quantity = req.Quantity
+	}
+	if len(req.Files) > 0 {
+		imageFile, err := req.Files[0].Open()
+		if err != nil {
+			return resp, http.StatusInternalServerError, err
+		}
+		defer imageFile.Close()
+
+		imageBytes, err := io.ReadAll(imageFile)
+		if err != nil {
+			return resp, http.StatusInternalServerError, err
+		}
+		existingSnack.Image = imageBytes
+	}
+
+	if err := s.snackRepository.Update(&existingSnack); err != nil {
+		return resp, http.StatusInternalServerError, err
+	}
+
+	return response.SuccessResponse{
+		Message: "Snack updated successfully",
+		Data:    existingSnack,
+	}, http.StatusOK, nil
+}
+
+func (s *snackServiceImpl) DeleteSnack(id uuid.UUID) (resp response.SuccessResponse, statusCode int, err error) {
+	if err := s.snackRepository.Delete(&models.Snack{BaseModel: models.BaseModel{ID: id}}); err != nil {
+		return resp, http.StatusInternalServerError, err
+	}
+	return response.SuccessResponse{
+		Message: "Snack deleted successfully",
 	}, http.StatusOK, nil
 }

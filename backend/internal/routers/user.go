@@ -12,6 +12,7 @@ type UserRountes struct {
 	userHandler    *handlers.UserHandler
 	validate       *validations.UserValidateImpl
 	authMiddleware *middlewares.AuthMiddleware
+	userValidate   *validations.UserValidateImpl
 }
 
 func NewUserRountes(app fiber.Router, userHandler *handlers.UserHandler, validate *validations.UserValidateImpl, authMiddleware *middlewares.AuthMiddleware) *UserRountes {
@@ -24,6 +25,6 @@ func (r *UserRountes) SetupRoutes() {
 	users.Post("/login", r.validate.ValidateLoginUser, r.userHandler.LoginUser)
 	users.Post("/logout", r.authMiddleware.AuthToken, r.userHandler.LogoutUser)
 	users.Get("/profile", r.authMiddleware.AuthToken, r.userHandler.GetUserProfile)
-	users.Get("/all", r.userHandler.GetAllUsers)
-	users.Put("/profile", r.validate.ValidateUpdateUser, r.userHandler.UpdateUser)
+	users.Get("/all", r.authMiddleware.AuthToken, r.userValidate.ValidateRoleAdmin, r.userHandler.GetAllUsers)
+	users.Put("/profile", r.authMiddleware.AuthToken, r.validate.ValidateUpdateUser, r.userHandler.UpdateUser)
 }

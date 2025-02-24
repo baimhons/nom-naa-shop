@@ -77,3 +77,27 @@ func (h *SnackHandler) GetAllSnacks(c *fiber.Ctx) error {
 	}
 	return c.Status(statusCode).JSON(resp)
 }
+
+func (h *SnackHandler) UpdateSnack(c *fiber.Ctx) error {
+	id := c.Params("id")
+	req := c.Locals("req").(request.UpdateSnackRequest)
+	userContext := c.Locals("userContext").(models.UserContext)
+	resp, statusCode, err := h.snackService.UpdateSnack(req, userContext, uuid.MustParse(id))
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: "Failed to update snack: " + err.Error(),
+		})
+	}
+	return c.Status(statusCode).JSON(resp)
+}
+
+func (h *SnackHandler) DeleteSnack(c *fiber.Ctx) error {
+	id := c.Params("id")
+	resp, statusCode, err := h.snackService.DeleteSnack(uuid.MustParse(id))
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: "Failed to delete snack: " + err.Error(),
+		})
+	}
+	return c.Status(statusCode).JSON(resp)
+}

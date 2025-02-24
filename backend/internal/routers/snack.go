@@ -23,4 +23,6 @@ func (r *SnackRouter) SetupRoutes() {
 	snack.Post("/", r.authMiddleware.AuthToken, r.userValidate.ValidateRoleAdmin, validations.NewSnackValidate().ValidateCreateSnackRequest, r.snackHandler.CreateSnack)
 	snack.Get("/", r.snackHandler.GetAllSnacks)
 	snack.Get("/image/:id", r.snackHandler.GetSnackImage)
+	snack.Put("/:id", r.authMiddleware.AuthToken, r.userValidate.ValidateRoleAdmin, validations.NewSnackValidate().ValidateUpdateSnackRequest, r.snackHandler.UpdateSnack)
+	snack.Delete("/:id", r.authMiddleware.AuthToken, r.userValidate.ValidateRoleAdmin, r.snackHandler.DeleteSnack)
 }

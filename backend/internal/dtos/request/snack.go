@@ -16,6 +16,12 @@ type CreateSnackRequest struct {
 	Files       []*multipart.FileHeader `form:"files" `
 }
 
+type UpdateSnackRequest struct {
+	Price    float64                 `form:"price" validate:"required"`
+	Quantity int                     `form:"quantity" validate:"required"`
+	Files    []*multipart.FileHeader `form:"files" `
+}
+
 func (r *CreateSnackRequest) ToModel() (*models.Snack, error) {
 
 	imageFile, err := r.Files[0].Open()
