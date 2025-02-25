@@ -27,12 +27,14 @@ type UserService interface {
 
 type userServiceImpl struct {
 	userRepository repositories.UserRepository
+	cartRepository repositories.CartRepository
 	redis          utils.RedisClient
 }
 
-func NewUserService(userRepository repositories.UserRepository, redis utils.RedisClient) UserService {
+func NewUserService(userRepository repositories.UserRepository, cartRepository repositories.CartRepository, redis utils.RedisClient) UserService {
 	return &userServiceImpl{
 		userRepository: userRepository,
+		cartRepository: cartRepository,
 		redis:          redis,
 	}
 }
@@ -63,9 +65,23 @@ func (us *userServiceImpl) RegisterUser(req request.RegisterUser) (resp response
 
 	newUser.Password = string(hashPassword)
 
-	if err := us.userRepository.Create(&newUser); err != nil {
+	tx := us.userRepository.Begin()
+
+	if err := tx.Create(&newUser).Error; err != nil {
+		tx.Rollback()
 		return resp, http.StatusInternalServerError, err
 	}
+
+	cart := models.Cart{
+		UserID: newUser.ID,
+	}
+
+	if err := tx.Create(&cart).Error; err != nil {
+		tx.Rollback()
+		return resp, http.StatusInternalServerError, err
+	}
+
+	tx.Commit()
 
 	return response.SuccessResponse{
 		Message: "User registered successfully!",

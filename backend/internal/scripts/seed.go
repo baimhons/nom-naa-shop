@@ -36,6 +36,26 @@ type jsonSubDistrict struct {
 }
 
 func SeedData(db *gorm.DB) {
+	var provinceCount int64
+	if err := db.Model(&models.Province{}).Count(&provinceCount).Error; err != nil {
+		log.Fatalf("failed to count province: %v", err)
+	}
+
+	var districtCount int64
+	if err := db.Model(&models.Districts{}).Count(&districtCount).Error; err != nil {
+		log.Fatalf("failed to count district: %v", err)
+	}
+
+	var subDistrictCount int64
+	if err := db.Model(&models.SubDistricts{}).Count(&subDistrictCount).Error; err != nil {
+		log.Fatalf("failed to count subdistrict: %v", err)
+	}
+
+	if provinceCount > 1 && districtCount > 1 && subDistrictCount > 1 {
+		log.Println("No need to seed data, province count is greater than 1.")
+		return
+	}
+
 	provinceFile, err := os.Open("../internal/data/address/provinces.json")
 	if err != nil {
 		log.Fatalf("failed to open province file: %v", err)

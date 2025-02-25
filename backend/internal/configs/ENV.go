@@ -17,6 +17,7 @@ type Environment struct {
 	REDIS_HOST    string `env:"REDIS_HOST" envDefault:"localhost"`
 	REDIS_PORT    string `env:"REDIS_PORT" envDefault:"6379"`
 	MAX_FILE_SIZE int64  `env:"MAX_FILE_SIZE" envDefault:"5"`
+	SCHEMA        string `env:"SCHEMA" envDefault:"nom_naa_shop"`
 }
 
 var ENV Environment

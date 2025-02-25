@@ -10,6 +10,5 @@ type Payment struct {
 	Order         Order     `gorm:"foreignKey:OrderID"`
 	PaymentMethod string    `gorm:"not null"`
 	Amount        float64   `gorm:"not null"`
-	Status        string    `gorm:"not null;default:'pending'"`
 	Proof         []byte    `gorm:"type:bytea"`
 }

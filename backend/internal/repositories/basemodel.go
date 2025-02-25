@@ -13,6 +13,7 @@ type BaseRepository[T any] interface {
 	Create(item *T) error
 	Update(item *T) error
 	Delete(item *T) error
+	Begin() *gorm.DB
 }
 
 type baseRepository[T any] struct {
@@ -57,4 +58,8 @@ func (r *baseRepository[T]) Update(item *T) error {
 
 func (r *baseRepository[T]) Delete(item *T) error {
 	return r.DB.Delete(item).Error
+}
+
+func (r *baseRepository[T]) Begin() *gorm.DB {
+	return r.DB.Begin()
 }

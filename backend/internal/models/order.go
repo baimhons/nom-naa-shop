@@ -10,6 +10,7 @@ type Order struct {
 	CartID     uuid.UUID `gorm:"not null"`
 	Cart       Cart      `gorm:"foreignKey:CartID"`
 	TotalPrice float64   `gorm:"not null"`
+	Status     string    `gorm:"not null;default:'pending'"`
 	AddressID  uuid.UUID `gorm:"not null"`
 	Address    Address   `gorm:"foreignKey:AddressID"`
 }

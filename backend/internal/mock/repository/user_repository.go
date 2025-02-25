@@ -5,6 +5,7 @@ import (
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 type MockUserRepository struct {
@@ -59,4 +60,9 @@ func (m *MockUserRepository) Delete(item *models.User) error {
 func (m *MockUserRepository) GetBy(field string, value string, item *models.User) error {
 	args := m.Called(field, value, item)
 	return args.Error(0)
+}
+
+func (m *MockUserRepository) Begin() *gorm.DB {
+	args := m.Called()
+	return args.Get(0).(*gorm.DB)
 }

@@ -2,11 +2,13 @@ package repositories
 
 import (
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type SnackRepository interface {
 	BaseRepository[models.Snack]
+	GetSnackByID(id uuid.UUID) (snack *models.Snack, err error)
 }
 
 type snackRepositoryImpl struct {
@@ -19,4 +21,8 @@ func NewSnackRepository(db *gorm.DB) SnackRepository {
 		BaseRepository: NewBaseRepository[models.Snack](db),
 		DB:             db,
 	}
+}
+
+func (r *snackRepositoryImpl) GetSnackByID(id uuid.UUID) (snack *models.Snack, err error) {
+	return snack, r.DB.Where("id = ?", id).First(&snack).Error
 }

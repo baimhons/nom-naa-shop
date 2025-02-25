@@ -19,13 +19,15 @@ type RegisterUserTestSuite struct {
 	mockRedis    *mock_utils.MockRedis
 	mockBcrypt   *mock_utils.MockBcrypt
 	mockUserRepo *mock_repository.MockUserRepository
+	mockCartRepo *mock_repository.MockCartRepository
 }
 
 func (s *RegisterUserTestSuite) SetupTest() {
 	s.mockUserRepo = new(mock_repository.MockUserRepository)
+	s.mockCartRepo = new(mock_repository.MockCartRepository)
 	s.mockRedis = new(mock_utils.MockRedis)
 	s.mockBcrypt = new(mock_utils.MockBcrypt)
-	s.service = services.NewUserService(s.mockUserRepo, s.mockRedis)
+	s.service = services.NewUserService(s.mockUserRepo, s.mockCartRepo, s.mockRedis)
 }
 
 func (s *RegisterUserTestSuite) TestRegisterUserSuccess() {

@@ -48,14 +48,18 @@ func InitializeApp() *App {
 	provinceRepo := repositories.NewRegionRepository[addressModel.Province](db)
 	districtRepo := repositories.NewRegionRepository[addressModel.Districts](db)
 	subDistrictRepo := repositories.NewRegionRepository[addressModel.SubDistricts](db)
+	cartRepository := repositories.NewCartRepository(db)
+	itemRepository := repositories.NewItemRepository(db)
 
-	userService := services.NewUserService(userRepository, redisClient)
+	userService := services.NewUserService(userRepository, cartRepository, redisClient)
 	addressService := services.NewAddressService(addressRepository, provinceRepo, districtRepo, subDistrictRepo)
 	snackService := services.NewSnackService(snackRepository)
+	cartService := services.NewCartService(cartRepository, snackRepository, itemRepository, db)
 
 	userHandler := handlers.NewUserHandler(userService)
 	addressHandler := handlers.NewAddressHandler(addressService)
 	snackHandler := handlers.NewSnackHandler(snackService)
+	cartHandler := handlers.NewCartHandler(cartService)
 
 	userValidate := validations.NewUserValidate()
 
@@ -66,6 +70,7 @@ func InitializeApp() *App {
 	userRoutes := routers.NewUserRountes(apiRoutes, userHandler, userValidate, authMiddleware)
 	addressRoutes := routers.NewAddressRouter(apiRoutes, addressHandler, authMiddleware)
 	snackRoutes := routers.NewSnackRouter(apiRoutes, snackHandler, authMiddleware)
+	cartRoutes := routers.NewCartRouter(apiRoutes, cartHandler, authMiddleware)
 
 	return &App{
 		App:   app,
@@ -75,6 +80,7 @@ func InitializeApp() *App {
 			userRoutes.SetupRoutes()
 			addressRoutes.SetupRoutes()
 			snackRoutes.SetupRoutes()
+			cartRoutes.SetupRoutes()
 		},
 	}
 }

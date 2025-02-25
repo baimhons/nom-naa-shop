@@ -5,14 +5,15 @@ import (
 	"log"
 
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
+	"github.com/baimhons/nom-naa-shop.git/internal/scripts"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func ConnectDB() *gorm.DB {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
-		ENV.DB_HOST, ENV.DB_USER, ENV.DB_PASSWORD, ENV.DB_NAME, ENV.DB_PORT,
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai search_path=%s",
+		ENV.DB_HOST, ENV.DB_USER, ENV.DB_PASSWORD, ENV.DB_NAME, ENV.DB_PORT, ENV.SCHEMA,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -21,9 +22,11 @@ func ConnectDB() *gorm.DB {
 		log.Fatalf("connect to database failure : %v\n", err)
 	}
 
-	// scripts.SeedData(db)
-
 	autoMigrate(db)
+
+	scripts.SeedData(db)
+
+	initalAdmin(db)
 
 	log.Println("connect to database successfully")
 
@@ -31,7 +34,6 @@ func ConnectDB() *gorm.DB {
 }
 
 func autoMigrate(db *gorm.DB) {
-	initalAdmin(db)
 	if err := db.AutoMigrate(
 		&models.BaseModel{},
 		&models.User{},
@@ -45,6 +47,7 @@ func autoMigrate(db *gorm.DB) {
 	); err != nil {
 		log.Fatalf("auto migrate failure : %v\n", err)
 	}
+	// initalAdmin(db)
 }
 
 func initalAdmin(db *gorm.DB) {
