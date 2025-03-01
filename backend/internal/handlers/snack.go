@@ -39,12 +39,11 @@ func (h *SnackHandler) GetSnackImage(c *fiber.Ctx) error {
 		})
 	}
 
-	c.Set("Content-Type", "image/jpeg")            // หรือ image/png
-	return c.Send(snack.Data.(models.Snack).Image) // ส่งเป็นไฟล์ภาพ
+	c.Set("Content-Type", "image/jpeg")
+	return c.Send(snack.Data.(models.Snack).Image)
 }
 
 func (h *SnackHandler) GetAllSnacks(c *fiber.Ctx) error {
-	// Ensure query parameters are parsed correctly
 	page, err := strconv.Atoi(c.Query("page", "0"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
@@ -60,7 +59,6 @@ func (h *SnackHandler) GetAllSnacks(c *fiber.Ctx) error {
 	sort := c.Query("sort", "name")
 	order := c.Query("order", "asc")
 
-	// Create a PaginationQuery object
 	querys := request.PaginationQuery{
 		Page:     &page,
 		PageSize: &pageSize,
@@ -68,7 +66,6 @@ func (h *SnackHandler) GetAllSnacks(c *fiber.Ctx) error {
 		Order:    &order,
 	}
 
-	// Pass the query object to the service
 	resp, statusCode, err := h.snackService.GetAllSnacks(querys)
 	if err != nil {
 		return c.Status(statusCode).JSON(response.ErrorResponse{
