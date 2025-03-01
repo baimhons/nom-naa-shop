@@ -48,3 +48,14 @@ func (v *CartValidateImpl) ValidateUpdateItemFromCart(c *fiber.Ctx) error {
 	c.Locals("req", req)
 	return c.Next()
 }
+
+func (v *CartValidateImpl) ValidateConfirmCart(c *fiber.Ctx) error {
+	var req request.ConfirmCartRequest
+
+	if err := validateCommonRequestBody(c, &req); err != nil {
+		return err
+	}
+
+	c.Locals("req", req)
+	return c.Next()
+}

@@ -1,6 +1,7 @@
 package models
 
 import (
+	addressModels "github.com/baimhons/nom-naa-shop.git/internal/models/address_models"
 	"github.com/google/uuid"
 )
 
@@ -15,4 +16,19 @@ type Address struct {
 	PostalCode        int       `gorm:"postal_code"`
 	AddressDetail     string    `gorm:"address_detail"`
 	UserID            uuid.UUID `gorm:"user_id"`
+}
+
+// Province represents a province in the system
+type Province struct {
+	addressModels.Province
+}
+
+// District represents a district in the system
+type District struct {
+	addressModels.Districts
+}
+
+// SubDistrict represents a sub-district in the system
+type SubDistrict struct {
+	addressModels.SubDistricts
 }

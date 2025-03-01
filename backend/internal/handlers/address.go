@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
@@ -136,7 +137,6 @@ func (h *AddressHandler) UpdateAddress(c *fiber.Ctx) error {
 }
 
 func (h *AddressHandler) DeleteAddress(c *fiber.Ctx) error {
-
 	userContext := c.Locals("userContext").(models.UserContext)
 	if userContext.ID == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
@@ -194,6 +194,7 @@ func (h *AddressHandler) GetAllAddress(c *fiber.Ctx) error {
 }
 
 func (h *AddressHandler) GetAddressByID(c *fiber.Ctx) error {
+	fmt.Println("test4==")
 	userContext := c.Locals("userContext").(models.UserContext)
 	if userContext.ID == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{

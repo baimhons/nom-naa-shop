@@ -10,6 +10,8 @@ type CartRepository interface {
 	BaseRepository[models.Cart]
 	GetCartByCondition(condition string, args ...interface{}) (cart *models.Cart, err error)
 	GetCartByID(id uuid.UUID) (*models.Cart, error)
+	GetDB() *gorm.DB
+	GetCartWithItems(cartID uuid.UUID) (*models.Cart, error)
 }
 
 type CartRepositoryImpl struct {
@@ -31,6 +33,21 @@ func (r *CartRepositoryImpl) GetCartByCondition(condition string, args ...interf
 func (r *CartRepositoryImpl) GetCartByID(id uuid.UUID) (*models.Cart, error) {
 	var cart models.Cart
 	if err := r.DB.Preload("Items.Snack").Where("id = ?", id).First(&cart).Error; err != nil {
+		return nil, err
+	}
+	return &cart, nil
+}
+
+func (r *CartRepositoryImpl) GetDB() *gorm.DB {
+	return r.DB
+}
+
+func (r *CartRepositoryImpl) GetCartWithItems(cartID uuid.UUID) (*models.Cart, error) {
+	var cart models.Cart
+	if err := r.DB.
+		Preload("Items").
+		Preload("Items.Snack").
+		First(&cart, cartID).Error; err != nil {
 		return nil, err
 	}
 	return &cart, nil

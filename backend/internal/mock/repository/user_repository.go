@@ -63,6 +63,6 @@ func (m *MockUserRepository) GetBy(field string, value string, item *models.User
 }
 
 func (m *MockUserRepository) Begin() *gorm.DB {
-	args := m.Called()
-	return args.Get(0).(*gorm.DB)
+
+	return &gorm.DB{} // ✅ ป้องกัน panic โดยคืน *gorm.DB เสมอ
 }

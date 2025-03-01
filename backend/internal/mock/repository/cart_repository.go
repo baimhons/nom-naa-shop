@@ -51,3 +51,11 @@ func (m *MockCartRepository) Delete(item *models.Cart) error {
 func (m *MockCartRepository) Begin() *gorm.DB {
 	return m.Called().Get(0).(*gorm.DB)
 }
+
+func (m *MockCartRepository) GetDB() *gorm.DB {
+	return m.Called().Get(0).(*gorm.DB)
+}
+
+func (m *MockCartRepository) GetCartWithItems(cartID uuid.UUID) (*models.Cart, error) {
+	return m.Called(cartID).Get(0).(*models.Cart), m.Called(cartID).Error(0)
+}

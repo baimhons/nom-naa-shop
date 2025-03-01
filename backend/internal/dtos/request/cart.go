@@ -12,3 +12,7 @@ type UpdateItemFromCartRequest struct {
 	SnackID  uuid.UUID `json:"snack_id" validate:"required"`
 	Quantity int       `json:"quantity" validate:"required,min=1"`
 }
+
+type ConfirmCartRequest struct {
+	CartID uuid.UUID `json:"cart_id" validate:"required"`
+}

@@ -31,16 +31,26 @@ func (s *RegisterUserTestSuite) SetupTest() {
 }
 
 func (s *RegisterUserTestSuite) TestRegisterUserSuccess() {
-	// Mock GetBy ตรวจสอบ username ก่อน
-	s.mockUserRepo.On("GetBy", "username", "testuser", mock.AnythingOfType("*models.User")).Return(gorm.ErrRecordNotFound)
+	// Mock the *gorm.DB to simulate transaction behavior
+	mockTx := new(mock.Mock) // Mock *gorm.DB as transaction
+	dbInstance := &gorm.DB{} // Create a real *gorm.DB instance
 
-	// Mock GetBy ตรวจสอบ email
+	// Mock Begin to return the mock transaction (Mock *gorm.DB instance)
+	s.mockUserRepo.On("Begin").Return(mockTx)
+
+	// Mock GetBy to return error for both username and email to check for non-existence
+	s.mockUserRepo.On("GetBy", "username", "testuser", mock.AnythingOfType("*models.User")).Return(gorm.ErrRecordNotFound)
 	s.mockUserRepo.On("GetBy", "email", "test@example.com", mock.AnythingOfType("*models.User")).Return(gorm.ErrRecordNotFound)
 
-	// Mock Create ให้สำเร็จ
-	s.mockUserRepo.On("Create", mock.AnythingOfType("*models.User")).Return(nil)
+	// Mock Create User and Cart using mockTx (This simulates the transaction context)
+	mockTx.On("Create", mock.AnythingOfType("*models.User")).Return(dbInstance)
+	mockTx.On("Create", mock.AnythingOfType("*models.Cart")).Return(dbInstance)
 
-	// เรียกใช้งานฟังก์ชัน RegisterUser
+	// Mock Commit and Rollback on the mock transaction (Simulating Commit and Rollback methods)
+	mockTx.On("Commit").Return(dbInstance)
+	mockTx.On("Rollback").Return(dbInstance)
+
+	// Call RegisterUser
 	_, status, err := s.service.RegisterUser(request.RegisterUser{
 		Username:        "testuser",
 		Email:           "test@example.com",
@@ -51,14 +61,17 @@ func (s *RegisterUserTestSuite) TestRegisterUserSuccess() {
 		LastName:        "Doe",
 	})
 
-	// ตรวจสอบว่าไม่มี error และ status เป็น 201 Created
+	// Verify no error and status is 201 Created
 	s.Require().NoError(err)
 	s.Require().Equal(http.StatusCreated, status)
 
-	// ตรวจสอบว่า mock ถูกเรียกตามที่คาดหวัง
+	// Assert mock calls were made correctly
+	s.mockUserRepo.AssertCalled(s.T(), "Begin")
 	s.mockUserRepo.AssertCalled(s.T(), "GetBy", "username", "testuser", mock.AnythingOfType("*models.User"))
 	s.mockUserRepo.AssertCalled(s.T(), "GetBy", "email", "test@example.com", mock.AnythingOfType("*models.User"))
-	s.mockUserRepo.AssertCalled(s.T(), "Create", mock.AnythingOfType("*models.User"))
+	mockTx.AssertCalled(s.T(), "Create", mock.AnythingOfType("*models.User"))
+	mockTx.AssertCalled(s.T(), "Create", mock.AnythingOfType("*models.Cart"))
+	mockTx.AssertCalled(s.T(), "Commit")
 }
 
 func (s *RegisterUserTestSuite) TestRegisterUserExist() {

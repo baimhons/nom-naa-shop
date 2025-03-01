@@ -119,3 +119,31 @@ func (h *CartHandler) DeleteItemFromCart(c *fiber.Ctx) error {
 		Data:    resp,
 	})
 }
+
+func (h *CartHandler) ConfirmCart(c *fiber.Ctx) error {
+	userContext, ok := c.Locals("userContext").(models.UserContext)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Message: "Unauthorized",
+		})
+	}
+
+	req, ok := c.Locals("req").(request.ConfirmCartRequest)
+	if !ok {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid request",
+		})
+	}
+
+	resp, statusCode, err := h.cartService.ConfirmCart(req.CartID, userContext)
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
+	return c.Status(statusCode).JSON(response.SuccessResponse{
+		Message: "Cart confirmed successfully",
+		Data:    resp,
+	})
+}

@@ -19,6 +19,7 @@ func NewAddressRouter(app fiber.Router, addressHandler *handlers.AddressHandler,
 
 func (r *AddressRouter) SetupRoutes() {
 	address := r.app.Group("/address")
+	address.Get("/provinces", r.addressHandler.GetAllProvinces)
 	address.Post("/", r.authMiddleware.AuthToken, validations.NewAddressValidate().ValidateCreateAddressRequest, r.addressHandler.CreateAddress)
 	address.Put("/:id", r.authMiddleware.AuthToken, validations.NewAddressValidate().ValidateUpdateAddressRequest, r.addressHandler.UpdateAddress)
 	address.Delete("/:id", r.authMiddleware.AuthToken, r.addressHandler.DeleteAddress)
@@ -27,7 +28,6 @@ func (r *AddressRouter) SetupRoutes() {
 	address.Get("/province/:province_code", r.addressHandler.GetProvince)
 	address.Get("/district/:district_code", r.addressHandler.GetDistrict)
 	address.Get("/sub_district/:sub_district_code", r.addressHandler.GetSubDistrict)
-	address.Get("/provinces", r.addressHandler.GetAllProvinces)
 	address.Get("/province/:province_code/districts", r.addressHandler.GetAllDistrictsByProvinceCode)
 	address.Get("/district/:district_code/sub_districts", r.addressHandler.GetAllSubDistrictsByDistrictCode)
 }

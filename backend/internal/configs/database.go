@@ -44,6 +44,9 @@ func autoMigrate(db *gorm.DB) {
 		&models.Cart{},
 		&models.Item{},
 		&models.Address{},
+		&models.Province{},
+		&models.District{},
+		&models.SubDistrict{},
 	); err != nil {
 		log.Fatalf("auto migrate failure : %v\n", err)
 	}

@@ -27,4 +27,5 @@ func (r *CartRouter) SetupRoutes() {
 	cart.Get("/", r.authMiddleware.AuthToken, r.cartHandler.GetCartByID)
 	cart.Put("/", r.authMiddleware.AuthToken, validations.NewCartValidate().ValidateUpdateItemFromCart, r.cartHandler.UpdateItemFromCart)
 	cart.Delete("/:item_id", r.authMiddleware.AuthToken, r.cartHandler.DeleteItemFromCart)
+	cart.Post("/confirm", r.authMiddleware.AuthToken, validations.NewCartValidate().ValidateConfirmCart, r.cartHandler.ConfirmCart)
 }

@@ -15,6 +15,7 @@ type CartService interface {
 	AddItemToCart(req request.AddItemToCartRequest, userContext models.UserContext) (*models.Cart, int, error)
 	GetCartByID(id uuid.UUID) (*models.Cart, int, error)
 	UpdateItemFromCart(req request.UpdateItemFromCartRequest, userContext models.UserContext) (*models.Cart, int, error)
+	ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
 	DeleteItemFromCart(itemID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
 }
 
@@ -158,4 +159,51 @@ func (s *CartServiceImpl) DeleteItemFromCart(itemID uuid.UUID, userContext model
 	}
 
 	return cart, fiber.StatusOK, nil
+}
+
+func (s *CartServiceImpl) ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
+	// Get cart with items and their associated snacks using a more detailed query
+	var cart models.Cart
+	if err := s.db.
+		Preload("Items", func(db *gorm.DB) *gorm.DB {
+			return db.Order("items.id")
+		}).
+		Preload("Items.Snack").
+		Where("id = ?", cartID).
+		First(&cart).Error; err != nil {
+		return nil, fiber.StatusInternalServerError, err
+	}
+
+	if cart.ID == uuid.Nil {
+		return nil, fiber.StatusBadRequest, errors.New("cart not found")
+	}
+
+	// Verify cart belongs to user
+	userUUID, err := uuid.Parse(userContext.ID)
+	if err != nil {
+		return nil, fiber.StatusInternalServerError, err
+	}
+
+	if cart.UserID != userUUID {
+		return nil, fiber.StatusForbidden, errors.New("cart does not belong to user")
+	}
+
+	// Start transaction
+	tx := s.cartRepository.Begin()
+
+	// Update cart status to "confirmed" - only update the status field
+	if err := tx.Model(&models.Cart{}).Where("id = ?", cart.ID).Update("status", "confirmed").Error; err != nil {
+		tx.Rollback()
+		return nil, fiber.StatusInternalServerError, err
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, fiber.StatusInternalServerError, err
+	}
+
+	// Return the cart we already loaded, but update its status field
+	// This ensures we return the exact same item and snack IDs
+	cart.Status = "confirmed"
+	return &cart, fiber.StatusOK, nil
 }
