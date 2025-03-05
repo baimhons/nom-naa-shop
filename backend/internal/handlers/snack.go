@@ -98,3 +98,27 @@ func (h *SnackHandler) DeleteSnack(c *fiber.Ctx) error {
 	}
 	return c.Status(statusCode).JSON(resp)
 }
+
+func (h *SnackHandler) CreateReview(c *fiber.Ctx) error {
+	req := c.Locals("req").(request.CreateReviewRequest)
+	userContext := c.Locals("userContext").(models.UserContext)
+	resp, statusCode, err := h.snackService.CreateReview(req, userContext)
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: "Failed to create review: " + err.Error(),
+		})
+	}
+	return c.Status(statusCode).JSON(resp)
+}
+
+func (h *SnackHandler) GetAllReviews(c *fiber.Ctx) error {
+	querys := c.Locals("querys").(request.PaginationQuery)
+	snackID := c.Params("snack_id")
+	resp, statusCode, err := h.snackService.GetAllReviewsBySnackID(querys, uuid.MustParse(snackID))
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: "Failed to get all reviews: " + err.Error(),
+		})
+	}
+	return c.Status(statusCode).JSON(resp)
+}

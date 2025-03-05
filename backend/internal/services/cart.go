@@ -112,13 +112,13 @@ func (s *CartServiceImpl) UpdateItemFromCart(req request.UpdateItemFromCartReque
 		return nil, fiber.StatusInternalServerError, errors.New("cart not found")
 	}
 
-	var item models.Item
-	if err := s.itemRepository.GetByID(&item, req.ItemID); err != nil {
+	item, err := s.itemRepository.GetItemByID(req.ItemID)
+	if err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("item not found")
 	}
 
-	var snack models.Snack
-	if err := s.snackRepository.GetByID(&snack, item.SnackID); err != nil {
+	snack, err := s.snackRepository.GetSnackByID(item.SnackID)
+	if err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("snack not found")
 	}
 
@@ -127,16 +127,16 @@ func (s *CartServiceImpl) UpdateItemFromCart(req request.UpdateItemFromCartReque
 	}
 
 	item.Quantity = req.Quantity
-	if err := s.itemRepository.Update(&item); err != nil {
+	if err := s.itemRepository.Update(item); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("failed to update item: " + err.Error())
 	}
 
-	var updatedCart models.Cart
-	if err := s.cartRepository.GetByID(&updatedCart, cart.ID); err != nil {
+	updatedCart, err := s.cartRepository.GetCartByID(cart.ID)
+	if err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("failed to fetch updated cart: " + err.Error())
 	}
 
-	return &updatedCart, fiber.StatusOK, nil
+	return updatedCart, fiber.StatusOK, nil
 }
 
 func (s *CartServiceImpl) DeleteItemFromCart(itemID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
@@ -145,21 +145,16 @@ func (s *CartServiceImpl) DeleteItemFromCart(itemID uuid.UUID, userContext model
 		return nil, fiber.StatusInternalServerError, errors.New("cart not found")
 	}
 
-	var item models.Item
-	if err := s.itemRepository.GetByID(&item, itemID); err != nil {
+	item, err := s.itemRepository.GetItemByCondition("id = ?", itemID)
+	if err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("item not found")
 	}
 
-	if err := s.itemRepository.Delete(&item); err != nil {
+	if err := s.itemRepository.Delete(item); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("failed to delete item: " + err.Error())
 	}
 
-	var updatedCart models.Cart
-	if err := s.cartRepository.GetByID(&updatedCart, cart.ID); err != nil {
-		return nil, fiber.StatusInternalServerError, errors.New("failed to fetch updated cart: " + err.Error())
-	}
-
-	return &updatedCart, fiber.StatusOK, nil
+	return cart, fiber.StatusOK, nil
 }
 
 func (s *CartServiceImpl) ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
