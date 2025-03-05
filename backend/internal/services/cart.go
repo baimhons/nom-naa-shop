@@ -53,7 +53,6 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 	isExist := false
 	var existingItem *models.Item
 
-	// Check if the item already exists in the cart
 	for i := range cart.Items {
 		if cart.Items[i].SnackID == req.SnackID {
 			isExist = true
@@ -61,14 +60,13 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 			break
 		}
 	}
-	// If the item exists, update the quantity
+
 	if isExist {
 		existingItem.Quantity += req.Quantity
 		if err := s.itemRepository.Update(existingItem); err != nil {
 			return nil, fiber.StatusInternalServerError, errors.New("failed to update item: " + err.Error())
 		}
 	} else {
-		// If the item doesn't exist, create a new one
 		newItem := models.Item{
 			SnackID:  req.SnackID,
 			Quantity: req.Quantity,
@@ -80,7 +78,6 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 		}
 	}
 
-	// Fetch the updated cart with all related data
 	updatedCart, err := s.cartRepository.GetCartByID(cart.ID)
 	if err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("failed to fetch updated cart: " + err.Error())
@@ -98,7 +95,6 @@ func (s *CartServiceImpl) GetCartByID(id uuid.UUID) (*models.Cart, int, error) {
 		return nil, fiber.StatusInternalServerError, err
 	}
 
-	// If Items are loaded but Snacks aren't, you might need to load them manually
 	for i := range cart.Items {
 		var snack models.Snack
 		if err := s.db.Where("id = ?", cart.Items[i].SnackID).First(&snack).Error; err != nil {
@@ -116,13 +112,13 @@ func (s *CartServiceImpl) UpdateItemFromCart(req request.UpdateItemFromCartReque
 		return nil, fiber.StatusInternalServerError, errors.New("cart not found")
 	}
 
-	item, err := s.itemRepository.GetItemByID(req.ItemID)
-	if err != nil {
+	var item models.Item
+	if err := s.itemRepository.GetByID(&item, req.ItemID); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("item not found")
 	}
 
-	snack, err := s.snackRepository.GetSnackByID(item.SnackID)
-	if err != nil {
+	var snack models.Snack
+	if err := s.snackRepository.GetByID(&snack, item.SnackID); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("snack not found")
 	}
 
@@ -131,16 +127,16 @@ func (s *CartServiceImpl) UpdateItemFromCart(req request.UpdateItemFromCartReque
 	}
 
 	item.Quantity = req.Quantity
-	if err := s.itemRepository.Update(item); err != nil {
+	if err := s.itemRepository.Update(&item); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("failed to update item: " + err.Error())
 	}
 
-	updatedCart, err := s.cartRepository.GetCartByID(cart.ID)
-	if err != nil {
+	var updatedCart models.Cart
+	if err := s.cartRepository.GetByID(&updatedCart, cart.ID); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("failed to fetch updated cart: " + err.Error())
 	}
 
-	return updatedCart, fiber.StatusOK, nil
+	return &updatedCart, fiber.StatusOK, nil
 }
 
 func (s *CartServiceImpl) DeleteItemFromCart(itemID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
@@ -149,16 +145,21 @@ func (s *CartServiceImpl) DeleteItemFromCart(itemID uuid.UUID, userContext model
 		return nil, fiber.StatusInternalServerError, errors.New("cart not found")
 	}
 
-	item, err := s.itemRepository.GetItemByCondition("id = ?", itemID)
-	if err != nil {
+	var item models.Item
+	if err := s.itemRepository.GetByID(&item, itemID); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("item not found")
 	}
 
-	if err := s.itemRepository.Delete(item); err != nil {
+	if err := s.itemRepository.Delete(&item); err != nil {
 		return nil, fiber.StatusInternalServerError, errors.New("failed to delete item: " + err.Error())
 	}
 
-	return cart, fiber.StatusOK, nil
+	var updatedCart models.Cart
+	if err := s.cartRepository.GetByID(&updatedCart, cart.ID); err != nil {
+		return nil, fiber.StatusInternalServerError, errors.New("failed to fetch updated cart: " + err.Error())
+	}
+
+	return &updatedCart, fiber.StatusOK, nil
 }
 
 func (s *CartServiceImpl) ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {

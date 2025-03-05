@@ -106,3 +106,22 @@ func (s *OrderServiceImpl) ConfirmOrder(order models.Order, userContext models.U
 
 	return finalOrder, http.StatusOK, nil
 }
+
+func (s *OrderServiceImpl) UpdateOrderStatus(order models.Order, userContext models.UserContext) (models.Order, int, error) {
+	order.Status = "delivered"
+
+	if err := s.orderRepository.Update(&order); err != nil {
+		return models.Order{}, http.StatusInternalServerError, err
+	}
+
+	return order, http.StatusOK, nil
+}
+
+func (s *OrderServiceImpl) GetOrder(order models.Order, userContext models.UserContext) (models.Order, int, error) {
+	order, err := s.orderRepository.GetOrder(order)
+	if err != nil {
+		return models.Order{}, http.StatusInternalServerError, err
+	}
+
+	return order, http.StatusOK, nil
+}
