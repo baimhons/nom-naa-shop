@@ -208,7 +208,10 @@ func (us *userServiceImpl) UpdateUser(req request.UpdateUser) (resp response.Suc
 		return resp, http.StatusInternalServerError, err
 	}
 
-	return resp, http.StatusOK, nil
+	return response.SuccessResponse{
+		Message: "User updated successfully",
+		Data:    user,
+	}, http.StatusOK, nil
 }
 
 func (us *userServiceImpl) DeleteUser(id uuid.UUID) (statusCode int, err error) {
