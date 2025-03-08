@@ -158,14 +158,8 @@ func (s *CartServiceImpl) DeleteItemFromCart(itemID uuid.UUID, userContext model
 }
 
 func (s *CartServiceImpl) ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
-	var cart models.Cart
-	if err := s.db.
-		Preload("Items", func(db *gorm.DB) *gorm.DB {
-			return db.Order("items.id")
-		}).
-		Preload("Items.Snack").
-		Where("id = ?", cartID).
-		First(&cart).Error; err != nil {
+	cart, err := s.cartRepository.GetCartWithItemsAndSnack(cartID)
+	if err != nil {
 		return nil, fiber.StatusInternalServerError, err
 	}
 
@@ -194,5 +188,5 @@ func (s *CartServiceImpl) ConfirmCart(cartID uuid.UUID, userContext models.UserC
 	}
 
 	cart.Status = "confirmed"
-	return &cart, fiber.StatusOK, nil
+	return cart, fiber.StatusOK, nil
 }
