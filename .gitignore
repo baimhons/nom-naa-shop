@@ -22,5 +22,7 @@ go.work
 go.work.sum
 
 # Environment files
+.env
+**/.env
 backend/deployment/env/.env
 backend/internal/configs/env.go
