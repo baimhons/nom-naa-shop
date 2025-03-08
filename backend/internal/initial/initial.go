@@ -57,7 +57,7 @@ func InitializeApp() *App {
 	userService := services.NewUserService(userRepository, cartRepository, redisClient)
 	addressService := services.NewAddressService(addressRepository, provinceRepo, districtRepo, subDistrictRepo)
 	snackService := services.NewSnackService(snackRepository, reviewRepository)
-	cartService := services.NewCartService(cartRepository, snackRepository, itemRepository, db)
+	cartService := services.NewCartService(cartRepository, snackRepository, itemRepository)
 	orderService := services.NewOrderService(orderRepository, cartRepository)
 	paymentService := services.NewPaymentService(paymentRepository)
 	userHandler := handlers.NewUserHandler(userService)

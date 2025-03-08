@@ -17,21 +17,20 @@ type CartService interface {
 	UpdateItemFromCart(req request.UpdateItemFromCartRequest, userContext models.UserContext) (*models.Cart, int, error)
 	ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
 	DeleteItemFromCart(itemID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
+	CancelCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
 }
 
 type CartServiceImpl struct {
 	cartRepository  repositories.CartRepository
 	snackRepository repositories.SnackRepository
 	itemRepository  repositories.ItemRepository
-	db              *gorm.DB
 }
 
-func NewCartService(cartRepository repositories.CartRepository, snackRepository repositories.SnackRepository, itemRepository repositories.ItemRepository, db *gorm.DB) *CartServiceImpl {
+func NewCartService(cartRepository repositories.CartRepository, snackRepository repositories.SnackRepository, itemRepository repositories.ItemRepository) *CartServiceImpl {
 	return &CartServiceImpl{
 		cartRepository:  cartRepository,
 		snackRepository: snackRepository,
 		itemRepository:  itemRepository,
-		db:              db,
 	}
 }
 
@@ -96,11 +95,11 @@ func (s *CartServiceImpl) GetCartByID(id uuid.UUID) (*models.Cart, int, error) {
 	}
 
 	for i := range cart.Items {
-		var snack models.Snack
-		if err := s.db.Where("id = ?", cart.Items[i].SnackID).First(&snack).Error; err != nil {
+		snack, err := s.snackRepository.GetSnackByID(cart.Items[i].SnackID)
+		if err != nil {
 			return nil, fiber.StatusInternalServerError, err
 		}
-		cart.Items[i].Snack = snack
+		cart.Items[i].Snack = *snack
 	}
 
 	return cart, fiber.StatusOK, nil
@@ -188,5 +187,28 @@ func (s *CartServiceImpl) ConfirmCart(cartID uuid.UUID, userContext models.UserC
 	}
 
 	cart.Status = "confirmed"
+	return cart, fiber.StatusOK, nil
+}
+
+func (s *CartServiceImpl) CancelCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
+	cart, err := s.cartRepository.GetCartByCondition("user_id = ? AND status = ?", userContext.ID, "pending")
+	if err != nil {
+		return nil, fiber.StatusInternalServerError, err
+	}
+
+	if cart.ID == uuid.Nil {
+		return nil, fiber.StatusBadRequest, errors.New("cart not found")
+	}
+
+	userUUID, err := uuid.Parse(userContext.ID)
+	if err != nil {
+		return nil, fiber.StatusInternalServerError, err
+	}
+
+	if cart.UserID != userUUID {
+		return nil, fiber.StatusForbidden, errors.New("cart does not belong to user")
+	}
+
+	cart.Status = "pending"
 	return cart, fiber.StatusOK, nil
 }
