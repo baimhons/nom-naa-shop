@@ -3,8 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, ArrowLeft, Loader2, MapPin } from "lucide-react";
+import { User, ArrowLeft, Loader2, MapPin, Edit } from "lucide-react";
 import AddressManager from "../components/AddressManager";
+import ProfileUpdateForm from "../components/UpdateProfileFrom";
 
 interface UserProfile {
   id: string;
@@ -20,6 +21,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses'>('profile');
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,6 +68,11 @@ const Profile = () => {
 
     fetchProfile();
   }, [navigate]);
+
+  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    setProfile(updatedProfile);
+    setIsEditing(false);
+  };
 
   if (loading) {
     return (
@@ -133,36 +140,64 @@ const Profile = () => {
               <CardDescription>Your account information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {profile && (
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Username</h3>
-                    <p className="mt-1 text-lg font-medium">{profile.username}</p>
+              {profile && !isEditing && (
+                <>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Username</h3>
+                      <p className="mt-1 text-lg font-medium">{profile.username}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                      <p className="mt-1 text-lg font-medium">{profile.email}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Phone Number</h3>
+                      <p className="mt-1 text-lg font-medium">{profile.phone_number || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
+                      <p className="mt-1 text-lg font-medium">
+                        {`${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Not provided"}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">User ID</h3>
+                      <p className="mt-1 text-sm font-mono text-gray-600 break-all">{profile.id}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                    <p className="mt-1 text-lg font-medium">{profile.email}</p>
+                  <div className="pt-4">
+                    <Button 
+                      onClick={() => setIsEditing(true)} 
+                      className="w-full sm:w-auto flex items-center gap-2"
+                    >
+                      <Edit className="h-4 w-4" /> Edit Profile
+                    </Button>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Phone Number</h3>
-                    <p className="mt-1 text-lg font-medium">{profile.phone_number || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
-                    <p className="mt-1 text-lg font-medium">
-                      {`${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">User ID</h3>
-                    <p className="mt-1 text-sm font-mono text-gray-600 break-all">{profile.id}</p>
-                  </div>
+                </>
+              )}
+              {profile && isEditing && (
+                <div className="pt-4">
+                  <h3 className="text-lg font-medium mb-4">Update Profile</h3>
+                  <ProfileUpdateForm 
+                    profile={profile} 
+                    onProfileUpdate={handleProfileUpdate} 
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-4" 
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-center gap-4">
-              <Button variant="outline" onClick={() => navigate("/products")}>Back to Shopping</Button>
-            </CardFooter>
+            {!isEditing && (
+              <CardFooter className="flex justify-center gap-4">
+                <Button variant="outline" onClick={() => navigate("/products")}>Back to Shopping</Button>
+              </CardFooter>
+            )}
           </Card>
         ) : (
           <Card>

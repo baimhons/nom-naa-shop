@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Plus, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { MapPin, Plus, X, Pencil, Trash2 } from "lucide-react";
 
 interface Province {
   id: number;
@@ -74,6 +75,8 @@ const AddressManager = () => {
   const [addingAddress, setAddingAddress] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [editingAddress, setEditingAddress] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{open: boolean, addressId: string | null}>({open: false, addressId: null});
 
   const form = useForm<AddressFormData>({
     defaultValues: {
@@ -83,6 +86,20 @@ const AddressManager = () => {
       address_detail: "",
     },
   });
+
+  // Reset form when switching between add/edit modes
+  useEffect(() => {
+    if (!addingAddress && !editingAddress) {
+      form.reset({
+        province_code: "",
+        district_code: "",
+        sub_district_code: "",
+        address_detail: "",
+      });
+      setSelectedProvince(null);
+      setSelectedDistrict(null);
+    }
+  }, [addingAddress, editingAddress, form]);
 
   useEffect(() => {
     fetchUserAddresses();
@@ -197,7 +214,7 @@ const AddressManager = () => {
   };
 
   const onSubmit = async (data: AddressFormData) => {
-    if (userAddresses.length >= 3) {
+    if (!editingAddress && userAddresses.length >= 3) {
       toast({
         title: "Error",
         description: "Maximum of 3 addresses allowed",
@@ -220,10 +237,21 @@ const AddressManager = () => {
         address_detail: data.address_detail
       };
 
-      console.log("Submitting address payload:", payload);
+      let url = "http://127.0.0.1:8080/api/v1/address";
+      let method = "POST";
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/address", {
-        method: "POST",
+      // If editing, include the ID and use PUT method
+      if (editingAddress) {
+        url = `http://127.0.0.1:8080/api/v1/address/${editingAddress}`;
+        method = "PUT";
+        // Add id to payload for update
+        Object.assign(payload, { id: editingAddress });
+      }
+
+      console.log(`${method === "POST" ? "Submitting" : "Updating"} address payload:`, payload);
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -233,23 +261,108 @@ const AddressManager = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add address");
+        throw new Error(errorData.message || `Failed to ${editingAddress ? "update" : "add"} address`);
       }
 
       toast({
         title: "Success",
-        description: "Address added successfully",
+        description: `Address ${editingAddress ? "updated" : "added"} successfully`,
       });
 
       // Refresh user addresses
       fetchUserAddresses();
       setAddingAddress(false);
+      setEditingAddress(null);
       form.reset();
     } catch (error) {
-      console.error("Error adding address:", error);
+      console.error(`Error ${editingAddress ? "updating" : "adding"} address:`, error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add address",
+        description: error instanceof Error ? error.message : `Failed to ${editingAddress ? "update" : "add"} address`,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (address: Address) => {
+    // Get the ID from either format
+    const addressId = address.ID || "";
+    
+    // Get the codes from either format
+    const provinceCode = String(address.ProvinceCode || address.province_code || "");
+    const districtCode = String(address.DistrictCode || address.district_code || "");
+    const subDistrictCode = String(address.SubDistrictCode || address.sub_district_code || "");
+    const addressDetail = address.AddressDetail || address.address_detail || "";
+
+    setEditingAddress(addressId);
+    
+    // First fetch the required data for the dropdowns
+    fetchDistricts(provinceCode)
+      .then(() => fetchSubDistricts(districtCode))
+      .then(() => {
+        // Then set the form values
+        form.setValue("province_code", provinceCode);
+        form.setValue("district_code", districtCode);
+        form.setValue("sub_district_code", subDistrictCode);
+        form.setValue("address_detail", addressDetail);
+        
+        // Update selected values for conditional rendering
+        setSelectedProvince(provinceCode);
+        setSelectedDistrict(districtCode);
+      })
+      .catch(error => {
+        console.error("Error setting up edit form:", error);
+        toast({
+          title: "Error",
+          description: "Failed to prepare the edit form. Please try again.",
+          variant: "destructive",
+        });
+      });
+  };
+
+  const handleDeleteConfirmation = (addressId: string) => {
+    setDeleteDialog({
+      open: true,
+      addressId
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteDialog.addressId) return;
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(`http://127.0.0.1:8080/api/v1/address/${deleteDialog.addressId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete address");
+      }
+
+      toast({
+        title: "Success",
+        description: "Address deleted successfully",
+      });
+
+      // Close dialog and refresh addresses
+      setDeleteDialog({ open: false, addressId: null });
+      fetchUserAddresses();
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete address",
         variant: "destructive",
       });
     } finally {
@@ -288,10 +401,23 @@ const AddressManager = () => {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg font-medium flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add New Address
+            {editingAddress ? (
+              <>
+                <Pencil className="h-4 w-4" />
+                Edit Address
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                Add New Address
+              </>
+            )}
           </CardTitle>
-          <CardDescription>You can add up to 3 addresses</CardDescription>
+          <CardDescription>
+            {editingAddress 
+              ? "Update your address information"
+              : "You can add up to 3 addresses"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -411,13 +537,14 @@ const AddressManager = () => {
                   variant="outline"
                   onClick={() => {
                     setAddingAddress(false);
+                    setEditingAddress(null);
                     form.reset();
                   }}
                 >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Save Address"}
+                  {loading ? "Saving..." : editingAddress ? "Update Address" : "Save Address"}
                 </Button>
               </div>
             </form>
@@ -434,16 +561,16 @@ const AddressManager = () => {
           <MapPin className="h-5 w-5" />
           Your Addresses
         </h3>
-        {!addingAddress && userAddresses.length < 3 && (
+        {!addingAddress && !editingAddress && userAddresses.length < 3 && (
           <Button onClick={() => setAddingAddress(true)} size="sm">
             <Plus className="mr-2 h-4 w-4" /> Add Address
           </Button>
         )}
       </div>
 
-      {addingAddress && renderAddressForm()}
+      {(addingAddress || editingAddress) && renderAddressForm()}
 
-      {userAddresses.length === 0 && !addingAddress ? (
+      {userAddresses.length === 0 && !addingAddress && !editingAddress ? (
         <Card className="bg-muted/50">
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">No addresses found. Add your first address.</p>
@@ -456,11 +583,36 @@ const AddressManager = () => {
         <div className="grid gap-4 md:grid-cols-2">
           {userAddresses.map((address, index) => {
             const displayAddress = getDisplayAddress(address);
+            const addressId = address.ID || "";
             
             return (
-              <Card key={address.ID || index} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-md font-medium">Address {index + 1}</CardTitle>
+              <Card key={addressId || index} className="overflow-hidden">
+                <CardHeader className="pb-2 flex flex-row justify-between items-start space-y-0">
+                  <div>
+                    <CardTitle className="text-md font-medium">Address {index + 1}</CardTitle>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleEdit(address)}
+                      disabled={addingAddress || !!editingAddress}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteConfirmation(addressId)}
+                      disabled={addingAddress || !!editingAddress}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="pb-4">
                   <div className="space-y-1">
@@ -476,6 +628,33 @@ const AddressManager = () => {
           })}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({open, addressId: null})}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Address</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this address? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex space-x-2 sm:justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteDialog({open: false, addressId: null})}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              disabled={loading}
+            >
+              {loading ? "Deleting..." : "Delete Address"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -15,9 +15,7 @@ type CartService interface {
 	AddItemToCart(req request.AddItemToCartRequest, userContext models.UserContext) (*models.Cart, int, error)
 	GetCartByID(id uuid.UUID) (*models.Cart, int, error)
 	UpdateItemFromCart(req request.UpdateItemFromCartRequest, userContext models.UserContext) (*models.Cart, int, error)
-	ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
 	DeleteItemFromCart(itemID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
-	CancelCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error)
 }
 
 type CartServiceImpl struct {
@@ -153,62 +151,5 @@ func (s *CartServiceImpl) DeleteItemFromCart(itemID uuid.UUID, userContext model
 		return nil, fiber.StatusInternalServerError, errors.New("failed to delete item: " + err.Error())
 	}
 
-	return cart, fiber.StatusOK, nil
-}
-
-func (s *CartServiceImpl) ConfirmCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
-	cart, err := s.cartRepository.GetCartWithItemsAndSnack(cartID)
-	if err != nil {
-		return nil, fiber.StatusInternalServerError, err
-	}
-
-	if cart.ID == uuid.Nil {
-		return nil, fiber.StatusBadRequest, errors.New("cart not found")
-	}
-
-	userUUID, err := uuid.Parse(userContext.ID)
-	if err != nil {
-		return nil, fiber.StatusInternalServerError, err
-	}
-
-	if cart.UserID != userUUID {
-		return nil, fiber.StatusForbidden, errors.New("cart does not belong to user")
-	}
-
-	tx := s.cartRepository.Begin()
-
-	if err := tx.Model(&models.Cart{}).Where("id = ?", cart.ID).Update("status", "confirmed").Error; err != nil {
-		tx.Rollback()
-		return nil, fiber.StatusInternalServerError, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return nil, fiber.StatusInternalServerError, err
-	}
-
-	cart.Status = "confirmed"
-	return cart, fiber.StatusOK, nil
-}
-
-func (s *CartServiceImpl) CancelCart(cartID uuid.UUID, userContext models.UserContext) (*models.Cart, int, error) {
-	cart, err := s.cartRepository.GetCartByCondition("user_id = ? AND status = ?", userContext.ID, "pending")
-	if err != nil {
-		return nil, fiber.StatusInternalServerError, err
-	}
-
-	if cart.ID == uuid.Nil {
-		return nil, fiber.StatusBadRequest, errors.New("cart not found")
-	}
-
-	userUUID, err := uuid.Parse(userContext.ID)
-	if err != nil {
-		return nil, fiber.StatusInternalServerError, err
-	}
-
-	if cart.UserID != userUUID {
-		return nil, fiber.StatusForbidden, errors.New("cart does not belong to user")
-	}
-
-	cart.Status = "pending"
 	return cart, fiber.StatusOK, nil
 }

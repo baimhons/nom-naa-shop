@@ -9,7 +9,15 @@ import (
 
 func Limiter() fiber.Handler {
 	return limiter.New(limiter.Config{
-		Max:        100,             // 100 request per minute same ip
-		Expiration: 1 * time.Minute, // 1 minute reset counter
+		Max:        20,
+		Expiration: 10 * time.Second,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"message": "Too many requests, please wait a moment before trying again",
+			})
+		},
 	})
 }

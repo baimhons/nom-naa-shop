@@ -40,6 +40,38 @@ func (h *OrderHandler) ConfirmOrder(c *fiber.Ctx) error {
 	})
 }
 
+func (h *OrderHandler) GetHistoryOrder(c *fiber.Ctx) error {
+	userContext := c.Locals("userContext").(models.UserContext)
+
+	orders, status, err := h.orderService.GetHistoryOrder(userContext)
+	if err != nil {
+		return c.Status(status).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Order history fetched successfully",
+		"orders":  orders,
+	})
+}
+
+func (h *OrderHandler) GetOrderByTrackingID(c *fiber.Ctx) error {
+	trackingID := c.Params("tracking_id")
+
+	order, status, err := h.orderService.GetOrderByTrackingID(trackingID)
+	if err != nil {
+		return c.Status(status).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Order fetched successfully",
+		"order":   order,
+	})
+}
+
 func (h *OrderHandler) UpdateOrderStatus(c *fiber.Ctx) error {
 
 	req := c.Locals("req").(request.UpdateOrderStatusRequest)

@@ -47,8 +47,8 @@ const RegisterForm = () => {
     // Username validation
     if (!formData.username) {
       newErrors.username = "Username is required";
-    } else if (formData.username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
+    } else if (formData.username.length < 5) {
+      newErrors.username = "Username must be at least 5 characters";
     }
 
     // First name validation
@@ -71,8 +71,8 @@ const RegisterForm = () => {
     // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     // Confirm password validation
@@ -147,7 +147,7 @@ const RegisterForm = () => {
 
       // Redirect to login page or dashboard after successful registration
       setTimeout(() => {
-        navigate('/');
+        navigate('/login');
       }, 1500);
     } catch (error) {
       toast({

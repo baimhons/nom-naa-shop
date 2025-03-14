@@ -210,7 +210,14 @@ func (us *userServiceImpl) UpdateUser(req request.UpdateUser) (resp response.Suc
 
 	return response.SuccessResponse{
 		Message: "User updated successfully",
-		Data:    user,
+		Data: response.UserProfileResponse{
+			ID:          user.ID,
+			Username:    user.Username,
+			Email:       user.Email,
+			PhoneNumber: user.PhoneNumber,
+			FirstName:   user.FirstName,
+			LastName:    user.LastName,
+		},
 	}, http.StatusOK, nil
 }
 

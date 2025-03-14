@@ -28,12 +28,16 @@ func NewCartRepository(db *gorm.DB) *CartRepositoryImpl {
 }
 
 func (r *CartRepositoryImpl) GetCartByCondition(condition string, args ...interface{}) (cart *models.Cart, err error) {
-	return cart, r.DB.Where(condition, args...).Preload("Items").Find(&cart).Error
+	return cart, r.DB.Where(condition, args...).Preload("Items", func(db *gorm.DB) *gorm.DB {
+		return db.Order("items.id")
+	}).Preload("Items.Snack").Find(&cart).Error
 }
 
 func (r *CartRepositoryImpl) GetCartByID(id uuid.UUID) (*models.Cart, error) {
 	var cart models.Cart
-	if err := r.DB.Preload("Items.Snack").Where("id = ?", id).First(&cart).Error; err != nil {
+	if err := r.DB.Preload("Items", func(db *gorm.DB) *gorm.DB {
+		return db.Order("items.id")
+	}).Preload("Items.Snack").Where("id = ?", id).First(&cart).Error; err != nil {
 		return nil, err
 	}
 	return &cart, nil

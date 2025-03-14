@@ -18,6 +18,8 @@ type OrderService interface {
 	GetOrderByID(orderID uuid.UUID) (models.Order, int, error)
 	GetAllOrders(querys request.PaginationQuery) (response.SuccessResponse, int, error)
 	GetTotalRevenue() (float64, int, error)
+	GetHistoryOrder(userContext models.UserContext) ([]models.Order, int, error)
+	GetOrderByTrackingID(trackingID string) (models.Order, int, error)
 }
 
 type OrderServiceImpl struct {
@@ -33,17 +35,13 @@ func NewOrderService(orderRepository repositories.OrderRepository, cartRepositor
 }
 
 func (s *OrderServiceImpl) ConfirmOrder(order models.Order, userContext models.UserContext) (models.Order, int, error) {
-	cart, err := s.cartRepository.GetCartByCondition("id = ? AND status = ?", order.CartID, "confirmed")
+	cart, err := s.cartRepository.GetCartByCondition("id = ? AND status = ?", order.CartID, "pending")
 	if err != nil {
 		return models.Order{}, http.StatusInternalServerError, err
 	}
 
 	if cart == nil || cart.ID == uuid.Nil {
 		return models.Order{}, http.StatusBadRequest, errors.New("cart not found")
-	}
-
-	if cart.Status != "confirmed" {
-		return models.Order{}, http.StatusBadRequest, errors.New("cart is not confirmed")
 	}
 
 	cartWithItems, err := s.cartRepository.GetCartWithItems(cart.ID)
@@ -143,6 +141,48 @@ func (s *OrderServiceImpl) GetOrderByID(orderID uuid.UUID) (models.Order, int, e
 			return db.Select("id, create_at, update_at, delete_at, order_id, amount, proof").Omit("Order")
 		}).
 		First(&order, orderID).Error; err != nil {
+		return models.Order{}, http.StatusInternalServerError, err
+	}
+
+	return order, http.StatusOK, nil
+}
+
+func (s *OrderServiceImpl) GetHistoryOrder(userContext models.UserContext) ([]models.Order, int, error) {
+	userUUID, err := uuid.Parse(userContext.ID)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	var orders []models.Order
+	if err := s.orderRepository.GetDB().
+		Preload("Cart").
+		Preload("Cart.Items").
+		Preload("Cart.Items.Snack").
+		Preload("Address").
+		Preload("Payment", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, create_at, update_at, delete_at, order_id, amount, proof").Omit("Order")
+		}).
+		Joins("JOIN carts ON orders.cart_id = carts.id").
+		Where("carts.user_id = ?", userUUID).
+		Find(&orders).Error; err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	return orders, http.StatusOK, nil
+}
+
+func (s *OrderServiceImpl) GetOrderByTrackingID(trackingID string) (models.Order, int, error) {
+	var order models.Order
+	if err := s.orderRepository.GetDB().
+		Preload("Cart").
+		Preload("Cart.Items").
+		Preload("Cart.Items.Snack").
+		Preload("Cart.User").
+		Preload("Address").
+		Preload("Payment", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, create_at, update_at, delete_at, order_id, amount, proof").Omit("Order")
+		}).
+		Where("tracking_id = ?", trackingID).First(&order).Error; err != nil {
 		return models.Order{}, http.StatusInternalServerError, err
 	}
 

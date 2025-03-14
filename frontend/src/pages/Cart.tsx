@@ -4,22 +4,31 @@ import { toast } from "@/hooks/use-toast";
 import { ShoppingCart, Trash, Plus, Minus, ArrowLeft, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-
-interface Snack {
-  ID: string;
-  Name: string;
-  Price: number;
-  Quantity: number;
-  Type: string;
-  Image: string;
-  Description: string;
-}
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface CartItem {
   ID: string;
   SnackID: string;
   Quantity: number;
-  Snack: Snack;
+  Snack: {
+    ID: string;
+    Name: string;
+    Price: number;
+    Quantity: number;
+    Type: string;
+    Image: string;
+    Description: string;
+  };
 }
 
 interface Cart {
@@ -33,6 +42,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,9 +64,6 @@ const Cart = () => {
         return;
       }
       
-      // Log the request details for debugging
-      console.log('Making cart request with token:', token.substring(0, 20) + '...');
-      
       const response = await fetch("http://127.0.0.1:8080/api/v1/cart/", {
         method: "GET",
         headers: {
@@ -64,8 +71,6 @@ const Cart = () => {
           "Content-Type": "application/json"
         }
       });
-
-      console.log('Cart response status:', response.status);
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -84,7 +89,11 @@ const Cart = () => {
 
       const data = await response.json();
       console.log('Cart data:', data);
-      setCart(data.data);
+      if (data && data.data) {
+        setCart(data.data);
+      } else {
+        throw new Error('Invalid cart data structure');
+      }
     } catch (err) {
       console.error('Cart fetch error:', err);
       toast({
@@ -142,16 +151,11 @@ const Cart = () => {
         throw new Error("Failed to update item quantity");
       }
 
-      await fetchCart(); // Refresh cart after update
-      
-      toast({
-        title: "Success",
-        description: "Item quantity updated successfully",
-      });
+      await fetchCart();
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to update item quantity",
+        description: "Failed to update item quantity. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -162,15 +166,35 @@ const Cart = () => {
   const removeItem = async (itemId: string) => {
     setDeletingItemId(itemId);
     try {
-      toast({
-        title: "Not implemented",
-        description: "Remove item functionality would be implemented here",
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "You need to be logged in to remove items",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch(`http://127.0.0.1:8080/api/v1/cart/${itemId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to remove item");
+      }
+
+      await fetchCart();
       
-      // Simulate item removal after 1 second
-      setTimeout(() => {
-        fetchCart();
-      }, 1000);
+      toast({
+        title: "Success",
+        description: "Item removed from cart",
+      });
     } catch (err) {
       toast({
         title: "Error",
@@ -183,15 +207,88 @@ const Cart = () => {
   };
 
   const calculateSubtotal = () => {
-    if (!cart || !cart.Items) return 0;
+    if (!cart?.Items) return 0;
     return cart.Items.reduce((total, item) => {
       return total + (item.Snack.Price * item.Quantity);
     }, 0);
   };
 
-  const getSnackImage = (snack: Snack) => {
+  const getSnackImage = (snack: CartItem['Snack']) => {
     return `http://127.0.0.1:8080/api/v1/snack/image/${snack.ID}`;
   };
+
+  const confirmCheckout = async () => {
+    if (!cart || cart.Items.length === 0) {
+      toast({
+        title: "Empty Cart",
+        description: "Your cart is empty. Add items before checking out.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCheckingOut(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login to checkout",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
+
+      // Simply redirect to orders page for confirmation
+      navigate("/orders", { 
+        state: { 
+          fromCart: true,
+          cartId: cart.ID 
+        } 
+      });
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!cart || !cart.Items || cart.Items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="py-12 text-center">
+              <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h2 className="text-xl font-medium text-gray-900 mb-1">Your cart is empty</h2>
+              <p className="text-gray-500 mb-6">Looks like you haven't added any snacks to your cart yet.</p>
+              <Link to="/products">
+                <Button className="mt-2">Browse Products</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12">
@@ -212,116 +309,92 @@ const Cart = () => {
                   Shopping Cart
                 </h1>
                 <span className="text-gray-500">
-                  {cart?.Items?.length || 0} {cart?.Items?.length === 1 ? 'item' : 'items'}
+                  {cart.Items.length} {cart.Items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
               
-              {loading ? (
-                <div className="py-8">
-                  <div className="flex justify-center items-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-                  </div>
-                  <p className="text-center text-gray-500 mt-4">Loading your cart...</p>
-                </div>
-              ) : cart?.Items?.length === 0 ? (
-                <div className="py-12 text-center">
-                  <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h2 className="text-xl font-medium text-gray-900 mb-1">Your cart is empty</h2>
-                  <p className="text-gray-500 mb-6">Looks like you haven't added any snacks to your cart yet.</p>
-                  <Link to="/products">
-                    <Button className="mt-2">Browse Products</Button>
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  <div className="hidden md:grid md:grid-cols-5 text-sm font-medium text-gray-500 mb-3 px-4">
-                    <div className="col-span-2">Product</div>
-                    <div className="text-center">Price</div>
-                    <div className="text-center">Quantity</div>
-                    <div className="text-right">Subtotal</div>
-                  </div>
-                  
-                  <Separator className="mb-4" />
-                  
-                  {cart?.Items?.map((item) => (
-                    <div key={item.ID} className="mb-6">
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                        <div className="col-span-2 flex items-center space-x-4">
-                          <div className="h-20 w-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                            <img 
-                              src={getSnackImage(item.Snack)} 
-                              alt={item.Snack.Name}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "public/lovable-uploads/93bbd02a-87dd-436e-9d2a-c053d585bed9.png";
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-gray-900">{item.Snack.Name}</h3>
-                            <p className="text-sm text-gray-500">{item.Snack.Type}</p>
-                            <button 
-                              onClick={() => removeItem(item.ID)}
-                              className="flex items-center text-sm text-red-500 mt-1 hover:text-red-700"
-                              disabled={deletingItemId === item.ID}
-                            >
-                              {deletingItemId === item.ID ? (
-                                <span className="flex items-center">
-                                  <span className="animate-spin h-3 w-3 border-b-2 border-red-500 rounded-full mr-1"></span>
-                                  Removing...
-                                </span>
-                              ) : (
-                                <>
-                                  <Trash className="h-3 w-3 mr-1" />
-                                  Remove
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="text-center">
-                          <span className="md:hidden font-medium text-gray-500 mr-2">Price:</span>
-                          ฿{item.Snack.Price.toFixed(2)}
-                        </div>
-                        
-                        <div className="flex items-center justify-center">
-                          <div className="flex items-center border border-gray-300 rounded-md">
-                            <button
-                              className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-                              onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity - 1)}
-                              disabled={updatingItemId === item.ID || item.Quantity <= 1}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </button>
-                            <span className="px-4 py-1">
-                              {updatingItemId === item.ID ? (
-                                <span className="inline-block h-4 w-4 animate-pulse bg-gray-200 rounded"></span>
-                              ) : (
-                                item.Quantity
-                              )}
-                            </span>
-                            <button
-                              className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-                              onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity + 1)}
-                              disabled={updatingItemId === item.ID || item.Quantity >= item.Snack.Quantity}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="text-right">
-                          <span className="md:hidden font-medium text-gray-500 mr-2">Subtotal:</span>
-                          <span className="font-medium">฿{(item.Snack.Price * item.Quantity).toFixed(2)}</span>
-                        </div>
+              {cart.Items.map((item) => (
+                <div key={item.ID} className="mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                    <div className="col-span-2 flex items-center space-x-4">
+                      <div className="h-20 w-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                        <img 
+                          src={getSnackImage(item.Snack)} 
+                          alt={item.Snack.Name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.png";
+                          }}
+                        />
                       </div>
-                      
-                      <Separator className="mt-6" />
+                      <div>
+                        <h3 className="font-medium text-gray-900">{item.Snack.Name}</h3>
+                        <p className="text-sm text-gray-500">{item.Snack.Type}</p>
+                        <button 
+                          onClick={() => removeItem(item.ID)}
+                          className="flex items-center text-sm text-red-500 mt-1 hover:text-red-700"
+                          disabled={deletingItemId === item.ID}
+                        >
+                          {deletingItemId === item.ID ? (
+                            <span className="flex items-center">
+                              <span className="animate-spin h-3 w-3 border-b-2 border-red-500 rounded-full mr-1"></span>
+                              Removing...
+                            </span>
+                          ) : (
+                            <>
+                              <Trash className="h-3 w-3 mr-1" />
+                              Remove
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  ))}
-                </>
-              )}
+                    
+                    <div className="text-center">
+                      <span className="md:hidden font-medium text-gray-500 mr-2">Price:</span>
+                      ฿{item.Snack.Price.toFixed(2)}
+                    </div>
+                    
+                    <div className="flex items-center justify-center">
+                      <div className="flex items-center border border-gray-300 rounded-md">
+                        <button
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                          onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity - 1)}
+                          disabled={updatingItemId === item.ID || item.Quantity <= 1}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max={item.Snack.Quantity}
+                          value={item.Quantity}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 1;
+                            const newQuantity = Math.min(Math.max(value, 1), item.Snack.Quantity);
+                            updateItemQuantity(item.ID, item.SnackID, newQuantity);
+                          }}
+                          className="w-16 text-center px-2 py-1 border-none focus:outline-none"
+                        />
+                        <button
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                          onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity + 1)}
+                          disabled={updatingItemId === item.ID || item.Quantity >= item.Snack.Quantity}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <span className="md:hidden font-medium text-gray-500 mr-2">Subtotal:</span>
+                      <span className="font-medium">฿{(item.Snack.Price * item.Quantity).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  
+                  <Separator className="mt-6" />
+                </div>
+              ))}
             </div>
           </div>
           
@@ -336,7 +409,7 @@ const Cart = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">฿0.00</span>
+                  <span className="font-medium">Free</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
@@ -345,9 +418,34 @@ const Cart = () => {
                 </div>
               </div>
               
-              <Button className="w-full">
-                Proceed to Checkout
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="w-full" disabled={isCheckingOut}>
+                    {isCheckingOut ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </div>
+                    ) : (
+                      "Proceed to Checkout"
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Order</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to place this order for ฿{calculateSubtotal().toFixed(2)}?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirmCheckout} disabled={isCheckingOut}>
+                      {isCheckingOut ? "Processing..." : "Confirm Order"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               
               <p className="text-xs text-gray-500 mt-4 text-center">
                 Taxes and shipping calculated at checkout
