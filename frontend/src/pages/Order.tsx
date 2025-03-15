@@ -55,6 +55,15 @@ interface AddressResponse {
   data: Address[];
 }
 
+interface UserProfile {
+  id: string;
+  username: string;
+  email: string;
+  phone_number: string;
+  first_name: string;
+  last_name: string;
+}
+
 type PaymentMethod = "qr code" | "bank transfer";
 
 const Orders = () => {
@@ -64,6 +73,7 @@ const Orders = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("qr code");
   const [isConfirming, setIsConfirming] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const fromCart = location.state?.fromCart;
@@ -72,6 +82,7 @@ const Orders = () => {
     if (fromCart) {
       fetchCart();
       fetchAddresses();
+      fetchUserProfile();
     } else {
       navigate('/cart');
     }
@@ -159,6 +170,46 @@ const Orders = () => {
       toast({
         title: "Error",
         description: "Failed to load addresses. Please try again or add a new address.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login to continue",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch("http://127.0.0.1:8080/api/v1/users/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      const data = await response.json();
+      if (data.data && data.data.data) {
+        setUserProfile(data.data.data);
+        console.log("User profile loaded:", data.data.data);
+      } else {
+        throw new Error("Invalid user profile data format");
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load user profile",
         variant: "destructive",
       });
     }
@@ -309,6 +360,36 @@ const Orders = () => {
               <h1 className="text-2xl font-semibold mb-6">Order Confirmation</h1>
               
               <div className="space-y-6">
+                {/* Contact Information */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+                  {userProfile ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Full Name</p>
+                        <p className="font-medium">
+                          {userProfile.first_name && userProfile.last_name 
+                            ? `${userProfile.first_name} ${userProfile.last_name}`
+                            : "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Phone Number</p>
+                        <p className="font-medium">{userProfile.phone_number || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p className="font-medium">{userProfile.email || "Not provided"}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-2"></div>
+                      <span className="text-sm text-gray-500">Loading contact information...</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Delivery Address Selection */}
                 <div className="border rounded-lg p-4">
                   <h3 className="text-lg font-medium mb-4">Delivery Address</h3>

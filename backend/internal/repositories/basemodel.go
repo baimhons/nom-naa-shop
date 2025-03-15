@@ -37,6 +37,10 @@ func (r *baseRepository[T]) GetAll(items *[]T, pagination *request.PaginationQue
 		query = query.Order(orderClause)
 	}
 
+	if pagination.Type != nil && *pagination.Type != "" {
+		query = query.Where("type = ?", *pagination.Type)
+	}
+
 	return query.Find(items).Error
 }
 

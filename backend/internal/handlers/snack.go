@@ -58,18 +58,33 @@ func (h *SnackHandler) GetAllSnacks(c *fiber.Ctx) error {
 	}
 	sort := c.Query("sort", "name")
 	order := c.Query("order", "asc")
+	snackType := c.Query("type", "")
+	search := c.Query("search", "")
 
 	querys := request.PaginationQuery{
 		Page:     &page,
 		PageSize: &pageSize,
 		Sort:     &sort,
 		Order:    &order,
+		Type:     &snackType,
+		Search:   &search,
 	}
 
 	resp, statusCode, err := h.snackService.GetAllSnacks(querys)
 	if err != nil {
 		return c.Status(statusCode).JSON(response.ErrorResponse{
 			Message: err.Error(),
+		})
+	}
+	return c.Status(statusCode).JSON(resp)
+}
+
+func (h *SnackHandler) GetSnackByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	resp, statusCode, err := h.snackService.GetSnackByID(uuid.MustParse(id))
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: "Failed to get snack by id: " + err.Error(),
 		})
 	}
 	return c.Status(statusCode).JSON(resp)
@@ -118,6 +133,16 @@ func (h *SnackHandler) GetAllReviews(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(statusCode).JSON(response.ErrorResponse{
 			Message: "Failed to get all reviews: " + err.Error(),
+		})
+	}
+	return c.Status(statusCode).JSON(resp)
+}
+
+func (h *SnackHandler) GetAllTypes(c *fiber.Ctx) error {
+	resp, statusCode, err := h.snackService.GetAllTypes()
+	if err != nil {
+		return c.Status(statusCode).JSON(response.ErrorResponse{
+			Message: "Failed to get snack types: " + err.Error(),
 		})
 	}
 	return c.Status(statusCode).JSON(resp)

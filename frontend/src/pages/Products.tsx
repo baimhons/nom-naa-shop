@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight, Search, Filter, ShoppingCart, Star, Package, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ProductCard from "@/components/ProductCard";
 
 interface Snack {
   ID: string;
@@ -33,42 +34,43 @@ interface User {
   Name: string;
 }
 
+interface ApiResponse {
+  data: Snack[];
+  total_count: number;
+  has_more: boolean;
+}
+
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [snacks, setSnacks] = useState<Snack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [types, setTypes] = useState<string[]>([]);
-  const [selectedType, setSelectedType] = useState<string>("");
   const [cartItems, setCartItems] = useState<Map<string, number>>(new Map());
   const [addingToCartIds, setAddingToCartIds] = useState<string[]>([]);
   const [cart, setCart] = useState<Cart | null>(null);
   const [loadingCart, setLoadingCart] = useState(false);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [sort, setSort] = useState("name");
-  const [order, setOrder] = useState("asc");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [isCheckingNextPage, setIsCheckingNextPage] = useState(false);
   const navigate = useNavigate();
 
+  // Get values directly from URL params
+  const page = parseInt(searchParams.get("page") || "0");
+  const selectedType = searchParams.get("type") || "";
+  const sort = searchParams.get("sort") || "name";
+  const order = searchParams.get("order") || "asc";
+  const search = searchParams.get("search") || "";
+
   useEffect(() => {
-    const pageParam = searchParams.get("page");
-    const typesParam = searchParams.get("type");
-    const sortParam = searchParams.get("sort");
-    const orderParam = searchParams.get("order");
-    
-    if (pageParam) setPage(parseInt(pageParam));
-    if (typesParam) setSelectedType(typesParam);
-    if (sortParam) setSort(sortParam);
-    if (orderParam) setOrder(orderParam);
-    
     fetchSnacks();
     checkAuthStatus();
-  }, [page, pageSize, sort, order, selectedType]);
+  }, [searchParams]); // Only depend on searchParams
 
   const checkAuthStatus = async () => {
     const token = localStorage.getItem('access_token');
@@ -137,41 +139,135 @@ const Products = () => {
     }
   };
 
+  const checkNextPage = async (currentPage: number) => {
+    try {
+      let nextPageUrl = `http://127.0.0.1:8080/api/v1/snack?page=${currentPage + 1}&page_size=${pageSize}&sort=${sort}&order=${order}`;
+      
+      if (selectedType) {
+        nextPageUrl += `&type=${encodeURIComponent(selectedType)}`;
+      }
+
+      if (search) {
+        nextPageUrl += `&search=${encodeURIComponent(search)}`;
+      }
+      
+      const response = await fetch(nextPageUrl);
+      
+      if (!response.ok) {
+        return false;
+      }
+      
+      const data: ApiResponse = await response.json();
+      return data.data && Array.isArray(data.data) && data.data.length > 0;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const fetchAllTypes = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8080/api/v1/snack/types');
+      if (!response.ok) {
+        throw new Error('Failed to fetch snack types');
+      }
+      const data = await response.json();
+      if (data.data && Array.isArray(data.data)) {
+        setTypes(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching snack types:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllTypes();
+  }, []);
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const searchTerm = event.target.value;
+    const newSearchParams = new URLSearchParams(searchParams);
+    
+    if (searchTerm) {
+      newSearchParams.set("search", searchTerm);
+    } else {
+      newSearchParams.delete("search");
+    }
+    
+    // Reset to first page when searching
+    newSearchParams.set("page", "0");
+    setSearchParams(newSearchParams);
+  };
+
+  // Add new function for handling search submit
+  const [searchInput, setSearchInput] = useState("");
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const newSearchParams = new URLSearchParams(searchParams);
+    
+    if (searchInput.trim()) {
+      newSearchParams.set("search", searchInput.trim());
+      newSearchParams.set("page", "0"); // Reset to first page when searching
+      setSearchParams(newSearchParams);
+      console.log("Debug - Sending search:", searchInput.trim()); // Add debug log
+    } else {
+      newSearchParams.delete("search");
+      newSearchParams.set("page", "0");
+      setSearchParams(newSearchParams);
+    }
+  };
+
+  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(event.target.value);
+  };
+
   const fetchSnacks = async () => {
     setLoading(true);
+    setError("");
+    setIsCheckingNextPage(true);
     try {
       let apiUrl = `http://127.0.0.1:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=${sort}&order=${order}`;
       
       if (selectedType) {
         apiUrl += `&type=${encodeURIComponent(selectedType)}`;
       }
+
+      if (search) {
+        console.log("Debug - Adding search to URL:", search);
+        apiUrl += `&search=${encodeURIComponent(search)}`;
+      }
       
+      console.log("Debug - Final API URL:", apiUrl);
       const response = await fetch(apiUrl);
       
       if (!response.ok) {
+        if (response.status === 429) {
+          toast({
+            title: "Rate limit reached",
+            description: "Please wait a moment before trying again",
+            variant: "destructive",
+          });
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          return fetchSnacks();
+        }
         throw new Error(`Error fetching snacks: ${response.status}`);
       }
       
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       
       if (data.data && Array.isArray(data.data)) {
         setSnacks(data.data);
+        setTotalCount(data.total_count || data.data.length);
+        const totalPages = Math.ceil((data.total_count || data.data.length) / pageSize);
+        setTotalPages(totalPages);
         
-        // Extract types from snacks
-        const snackTypes: string[] = [];
-        data.data.forEach((snack: Snack) => {
-          if (typeof snack.Type === 'string' && snack.Type) {
-            snackTypes.push(snack.Type);
-          }
-        });
-        
-        const uniqueTypes = [...new Set(snackTypes)];
-        setTypes(uniqueTypes);
-        
-        setTotalCount(data.total_count || data.data.length * 3);
-        setTotalPages(Math.ceil(data.total_count / pageSize) || 3);
+        // Check if current page is the last page or if there are no more items
+        const isLastPage = page >= totalPages - 1;
+        const hasNextPage = !isLastPage && await checkNextPage(page);
+        setHasMore(hasNextPage);
       } else {
         setSnacks([]);
+        setHasMore(false);
       }
     } catch (err) {
       setError("Failed to fetch snacks. Please try again later.");
@@ -182,6 +278,7 @@ const Products = () => {
       });
     } finally {
       setLoading(false);
+      setIsCheckingNextPage(false);
     }
   };
 
@@ -236,9 +333,14 @@ const Products = () => {
   }, [isLoggedIn]);
 
   const handleTypeChange = (type: string) => {
-    setSelectedType(type);
-    setPage(0);
-    updateSearchParams({ type, page: "0" });
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (type) {
+      newSearchParams.set("type", type);
+    } else {
+      newSearchParams.delete("type");
+    }
+    newSearchParams.set("page", "0");
+    setSearchParams(newSearchParams);
   };
 
   const updateSearchParams = (params: Record<string, string>) => {
@@ -270,16 +372,16 @@ const Products = () => {
   };
 
   const handleNextPage = () => {
-    const newPage = page + 1;
-    setPage(newPage);
-    updateSearchParams({ page: newPage.toString() });
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("page", (page + 1).toString());
+    setSearchParams(newSearchParams);
   };
 
   const handlePrevPage = () => {
     if (page > 0) {
-      const newPage = page - 1;
-      setPage(newPage);
-      updateSearchParams({ page: newPage.toString() });
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("page", (page - 1).toString());
+      setSearchParams(newSearchParams);
     }
   };
 
@@ -335,7 +437,34 @@ const Products = () => {
   };
 
   const getSnackImage = (snack: Snack) => {
-    return `http://127.0.0.1:8080/api/v1/snack/image/${snack.ID}`;
+    // First try to use the Image URL if it exists and is a full URL
+    if (snack.Image && typeof snack.Image === 'string' && snack.Image.startsWith('http')) {
+      return snack.Image;
+    }
+
+    // If Image is a base64 string, use it directly
+    if (snack.Image && typeof snack.Image === 'string' && snack.Image.startsWith('data:image')) {
+      return snack.Image;
+    }
+
+    // Then try the API endpoint for byte array images
+    try {
+      return `http://127.0.0.1:8080/api/v1/snack/image/${encodeURIComponent(snack.ID)}`;
+    } catch (error) {
+      console.error('Error getting snack image:', error);
+      return '/placeholder.png';
+    }
+  };
+
+  const fallbackImageUrl = "/placeholder.png";
+
+  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const img = event.target as HTMLImageElement;
+    if (!img.src.includes(fallbackImageUrl)) {
+      console.error('Image failed to load:', img.src);
+      img.src = fallbackImageUrl;
+      img.classList.add('image-fallback');
+    }
   };
 
   const generateRandomRating = () => {
@@ -357,6 +486,14 @@ const Products = () => {
 
     // If token exists, navigate to cart
     navigate('/cart');
+  };
+
+  const handleSortChange = (value: string) => {
+    const [newSort, newOrder] = value.split('-');
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("sort", newSort);
+    newSearchParams.set("order", newOrder);
+    setSearchParams(newSearchParams);
   };
 
   return (
@@ -428,16 +565,20 @@ const Products = () => {
               Discover our wide selection of tasty treats, from crispy chips to sweet delights
             </p>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-              <div className="relative rounded-md shadow-sm w-full max-w-xs">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
+              <form onSubmit={handleSearchSubmit} className="w-full">
+                <div className="relative rounded-md shadow-sm w-full max-w-xs mx-auto">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="form-input block w-full pl-10 py-3 text-base rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                    placeholder="ค้นหาชื่อขนม..."
+                    value={searchInput}
+                    onChange={handleSearchInputChange}
+                  />
                 </div>
-                <input
-                  type="text"
-                  className="form-input block w-full pl-10 py-3 text-base rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="Search snacks..."
-                />
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -445,14 +586,21 @@ const Products = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="mb-6 bg-white p-4 rounded-lg shadow-sm flex justify-between items-center">
-          <div className="flex items-center">
-            <ShoppingCart className="h-6 w-6 text-primary mr-2" />
-            {loadingCart ? (
-              <span className="font-medium">Loading cart...</span>
-            ) : (
-              <span className="font-medium">
-                {Array.from(cartItems.values()).reduce((sum, qty) => sum + qty, 0)} items in cart
-              </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center">
+              <ShoppingCart className="h-6 w-6 text-primary mr-2" />
+              {loadingCart ? (
+                <span className="font-medium">Loading cart...</span>
+              ) : (
+                <span className="font-medium">
+                  {Array.from(cartItems.values()).reduce((sum, qty) => sum + qty, 0)} items in cart
+                </span>
+              )}
+            </div>
+            {search && (
+              <div className="text-sm text-gray-500">
+                ผลการค้นหา: "{search}"
+              </div>
             )}
           </div>
           <Button 
@@ -512,12 +660,7 @@ const Products = () => {
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Sort By</h3>
                   <select
                     value={`${sort}-${order}`}
-                    onChange={(e) => {
-                      const [newSort, newOrder] = e.target.value.split('-');
-                      setSort(newSort);
-                      setOrder(newOrder);
-                      updateSearchParams({ sort: newSort, order: newOrder });
-                    }}
+                    onChange={(e) => handleSortChange(e.target.value)}
                     className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary focus:outline-none focus:ring-primary"
                   >
                     <option value="name-asc">Name (A-Z)</option>
@@ -532,8 +675,8 @@ const Products = () => {
 
           <div className="flex-1">
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, index) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+                {[...Array(12)].map((_, index) => (
                   <div key={index} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
                     <div className="w-full h-48 bg-gray-200 rounded-md"></div>
                     <div className="h-6 bg-gray-200 rounded mt-4 w-3/4"></div>
@@ -562,72 +705,20 @@ const Products = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {snacks.map((snack) => {
-                    const rating = generateRandomRating();
-                    return (
-                      <div 
-                        key={snack.ID} 
-                        className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 group"
-                      >
-                        <div className="relative h-48 bg-gray-100 overflow-hidden">
-                          <img
-                            src={getSnackImage(snack)}
-                            alt={snack.Name}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "public/lovable-uploads/93bbd02a-87dd-436e-9d2a-c053d585bed9.png";
-                            }}
-                          />
-                          {snack.Quantity < 5 && snack.Quantity > 0 && (
-                            <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                              Only {snack.Quantity} left!
-                            </span>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <span className="inline-block px-2 py-1 text-xs font-semibold text-primary-800 bg-primary-100 rounded-full mb-2">
-                            {snack.Type}
-                          </span>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">{snack.Name}</h3>
-                          <p className="text-sm text-gray-500 mb-2 line-clamp-2">{snack.Description}</p>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="font-bold text-gray-900">฿{snack.Price.toFixed(2)}</span>
-                            <div className="flex items-center">
-                              <div className="flex mr-2">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className="h-4 w-4"
-                                    fill={i < Math.floor(rating) ? "#FFC107" : "none"}
-                                    stroke={i < Math.floor(rating) ? "#FFC107" : "#9CA3AF"}
-                                  />
-                                ))}
-                              </div>
-                              <span className="text-sm text-gray-500">{rating.toFixed(1)}</span>
-                            </div>
-                          </div>
-                          <Button
-                            className="w-full mt-3 flex items-center justify-center gap-2"
-                            onClick={() => handleAddToCart(snack.ID)}
-                            disabled={snack.Quantity === 0 || addingToCartIds.includes(snack.ID)}
-                          >
-                            {snack.Quantity === 0 ? "Out of Stock" : addingToCartIds.includes(snack.ID) ? (
-                              <>
-                                <span className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2"></span>
-                                Adding...
-                              </>
-                            ) : (
-                              <>
-                                <ShoppingCart className="h-4 w-4" />
-                                Add to Cart
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+                  {snacks.map((snack) => (
+                    <ProductCard
+                      key={snack.ID}
+                      id={snack.ID}
+                      name={snack.Name}
+                      price={snack.Price}
+                      quantity={snack.Quantity}
+                      type={snack.Type}
+                      image={getSnackImage(snack)}
+                      description={snack.Description}
+                      onAddToCart={handleAddToCart}
+                    />
+                  ))}
                 </div>
 
                 <div className="flex items-center justify-between mt-8">
@@ -640,38 +731,23 @@ const Products = () => {
                     <ChevronLeft className="h-4 w-4" />
                     Previous
                   </Button>
-                  <div className="flex items-center space-x-2">
-                    {[...Array(Math.min(totalPages, 5))].map((_, i) => {
-                      let pageNumber = i;
-                      if (totalPages > 5) {
-                        if (page > 1 && page < totalPages - 2) {
-                          pageNumber = page - 2 + i;
-                        } else if (page >= totalPages - 2) {
-                          pageNumber = totalPages - 5 + i;
-                        }
-                      }
-                      return (
-                        <Button
-                          key={pageNumber}
-                          variant={pageNumber === page ? "default" : "outline"}
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            setPage(pageNumber);
-                            updateSearchParams({ page: pageNumber.toString() });
-                          }}
-                        >
-                          {pageNumber + 1}
-                        </Button>
-                      );
-                    })}
-                  </div>
                   <Button 
                     variant="outline" 
                     onClick={handleNextPage} 
+                    disabled={!hasMore || isCheckingNextPage || snacks.length < pageSize}
                     className="flex items-center gap-1"
                   >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
+                    {isCheckingNextPage ? (
+                      <>
+                        <span className="animate-spin h-4 w-4 border-b-2 border-current rounded-full"></span>
+                        Checking...
+                      </>
+                    ) : (
+                      <>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </>

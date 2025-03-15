@@ -388,7 +388,7 @@ const RegisterForm = () => {
       {/* Login Link */}
       <div className="text-center text-sm">
         <span className="text-muted-foreground">Already have an account?</span>{" "}
-        <a href="/" className="text-primary font-medium hover:underline transition-colors">
+        <a href="/login" className="text-primary font-medium hover:underline transition-colors">
           Sign in
         </a>
       </div>

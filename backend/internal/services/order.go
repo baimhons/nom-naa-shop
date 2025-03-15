@@ -155,9 +155,14 @@ func (s *OrderServiceImpl) GetHistoryOrder(userContext models.UserContext) ([]mo
 
 	var orders []models.Order
 	if err := s.orderRepository.GetDB().
-		Preload("Cart").
+		Preload("Cart", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, create_at, update_at, delete_at, status, user_id")
+		}).
 		Preload("Cart.Items").
 		Preload("Cart.Items.Snack").
+		Preload("Cart.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, create_at, update_at, delete_at, username,first_name, last_name, email, phone_number")
+		}).
 		Preload("Address").
 		Preload("Payment", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, create_at, update_at, delete_at, order_id, amount, proof").Omit("Order")
@@ -167,7 +172,6 @@ func (s *OrderServiceImpl) GetHistoryOrder(userContext models.UserContext) ([]mo
 		Find(&orders).Error; err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
-
 	return orders, http.StatusOK, nil
 }
 
@@ -177,7 +181,9 @@ func (s *OrderServiceImpl) GetOrderByTrackingID(trackingID string) (models.Order
 		Preload("Cart").
 		Preload("Cart.Items").
 		Preload("Cart.Items.Snack").
-		Preload("Cart.User").
+		Preload("Cart.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, create_at, update_at, delete_at, username,first_name, last_name, email, phone_number")
+		}).
 		Preload("Address").
 		Preload("Payment", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, create_at, update_at, delete_at, order_id, amount, proof").Omit("Order")
@@ -195,7 +201,9 @@ func (s *OrderServiceImpl) GetAllOrders(querys request.PaginationQuery) (respons
 		Preload("Cart").
 		Preload("Cart.Items").
 		Preload("Cart.Items.Snack").
-		Preload("Cart.User").
+		Preload("Cart.User", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, create_at, update_at, delete_at, username,first_name, last_name, email, phone_number")
+		}).
 		Preload("Address").
 		Preload("Payment", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, create_at, update_at, delete_at, order_id, amount, proof").Omit("Order")

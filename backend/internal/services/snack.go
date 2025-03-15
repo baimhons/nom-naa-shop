@@ -20,6 +20,7 @@ type SnackService interface {
 	DeleteSnack(id uuid.UUID) (resp response.SuccessResponse, statusCode int, err error)
 	CreateReview(req request.CreateReviewRequest, userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error)
 	GetAllReviewsBySnackID(querys request.PaginationQuery, snackID uuid.UUID) (resp response.SuccessResponse, statusCode int, err error)
+	GetAllTypes() (resp response.SuccessResponse, statusCode int, err error)
 }
 
 type snackServiceImpl struct {
@@ -64,6 +65,13 @@ func (s *snackServiceImpl) GetSnackByID(id uuid.UUID) (resp response.SuccessResp
 	if err := s.snackRepository.GetByID(&snack, id); err != nil {
 		return resp, http.StatusInternalServerError, err
 	}
+
+	reviews := []models.Review{}
+	if err := s.reviewRepository.GetAllBySnackID(&reviews, nil, id); err != nil {
+		return resp, http.StatusInternalServerError, err
+	}
+
+	snack.Reviews = reviews
 
 	return response.SuccessResponse{
 		Message: "Snack fetched successfully",
@@ -157,5 +165,17 @@ func (s *snackServiceImpl) DeleteSnack(id uuid.UUID) (resp response.SuccessRespo
 	}
 	return response.SuccessResponse{
 		Message: "Snack deleted successfully",
+	}, http.StatusOK, nil
+}
+
+func (s *snackServiceImpl) GetAllTypes() (resp response.SuccessResponse, statusCode int, err error) {
+	types, err := s.snackRepository.GetAllTypes()
+	if err != nil {
+		return resp, http.StatusInternalServerError, err
+	}
+
+	return response.SuccessResponse{
+		Message: "Snack types fetched successfully",
+		Data:    types,
 	}, http.StatusOK, nil
 }

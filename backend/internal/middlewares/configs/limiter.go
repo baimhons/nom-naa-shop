@@ -9,8 +9,8 @@ import (
 
 func Limiter() fiber.Handler {
 	return limiter.New(limiter.Config{
-		Max:        20,
-		Expiration: 10 * time.Second,
+		Max:        100,
+		Expiration: 5 * time.Second,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP()
 		},

@@ -330,23 +330,13 @@ const Cart = () => {
                       <div>
                         <h3 className="font-medium text-gray-900">{item.Snack.Name}</h3>
                         <p className="text-sm text-gray-500">{item.Snack.Type}</p>
-                        <button 
-                          onClick={() => removeItem(item.ID)}
-                          className="flex items-center text-sm text-red-500 mt-1 hover:text-red-700"
-                          disabled={deletingItemId === item.ID}
-                        >
-                          {deletingItemId === item.ID ? (
-                            <span className="flex items-center">
-                              <span className="animate-spin h-3 w-3 border-b-2 border-red-500 rounded-full mr-1"></span>
-                              Removing...
-                            </span>
-                          ) : (
-                            <>
-                              <Trash className="h-3 w-3 mr-1" />
-                              Remove
-                            </>
-                          )}
-                        </button>
+                        {item.Snack.Quantity <= 10 ? (
+                          <span className="text-sm text-red-400">
+                            {item.Snack.Quantity} item{item.Snack.Quantity > 1 ? 's' : ''} left!
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-500"></span>
+                        )}
                       </div>
                     </div>
                     
@@ -355,37 +345,38 @@ const Cart = () => {
                       ฿{item.Snack.Price.toFixed(2)}
                     </div>
                     
-                    <div className="flex items-center justify-center">
-                      <div className="flex items-center border border-gray-300 rounded-md">
-                        <button
-                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-                          onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity - 1)}
-                          disabled={updatingItemId === item.ID || item.Quantity <= 1}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <input
-                          type="number"
-                          min="1"
-                          max={item.Snack.Quantity}
-                          value={item.Quantity}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value) || 1;
-                            const newQuantity = Math.min(Math.max(value, 1), item.Snack.Quantity);
-                            updateItemQuantity(item.ID, item.SnackID, newQuantity);
-                          }}
-                          className="w-16 text-center px-2 py-1 border-none focus:outline-none"
-                        />
-                        <button
-                          className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-                          onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity + 1)}
-                          disabled={updatingItemId === item.ID || item.Quantity >= item.Snack.Quantity}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
+                    <div className="text-right">
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center border border-gray-300 rounded-md">
+                          <button
+                            className="px-2 py-1 text-gray-600 hover:bg-gray-100" 
+                            onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity - 1)}
+                            disabled={updatingItemId === item.ID || item.Quantity <= 1}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            max={item.Snack.Quantity}
+                            value={item.Quantity}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              const newQuantity = Math.min(Math.max(value, 1), item.Snack.Quantity);
+                              updateItemQuantity(item.ID, item.SnackID, newQuantity);
+                            }}
+                            className="w-16 text-center px-2 py-1 border-none focus:outline-none"
+                          />
+                          <button
+                            className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                            onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity + 1)}
+                            disabled={updatingItemId === item.ID || item.Quantity >= item.Snack.Quantity}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    
                     <div className="text-right">
                       <span className="md:hidden font-medium text-gray-500 mr-2">Subtotal:</span>
                       <span className="font-medium">฿{(item.Snack.Price * item.Quantity).toFixed(2)}</span>
@@ -393,6 +384,25 @@ const Cart = () => {
                   </div>
                   
                   <Separator className="mt-6" />
+                  <div className="flex justify-end mt-4">
+                    <button 
+                      onClick={() => removeItem(item.ID)}
+                      className="flex items-center text-sm text-red-500 hover:text-red-700"
+                      disabled={deletingItemId === item.ID}
+                    >
+                      {deletingItemId === item.ID ? (
+                        <span className="flex items-center">
+                          <span className="animate-spin h-3 w-3 border-b-2 border-red-500 rounded-full mr-1"></span>
+                          Removing...
+                        </span>
+                      ) : (
+                        <>
+                          <Trash className="h-3 w-3 mr-1" />
+                          Remove
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

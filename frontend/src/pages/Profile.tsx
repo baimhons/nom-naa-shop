@@ -3,9 +3,10 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, ArrowLeft, Loader2, MapPin, Edit } from "lucide-react";
+import { User, ArrowLeft, Loader2, MapPin, Edit, PackageIcon } from "lucide-react";
 import AddressManager from "../components/AddressManager";
-import ProfileUpdateForm from "../components/UpdateProfileFrom";
+import ProfileUpdateForm from "../components/ProfileUpdateForm";
+import OrderHistory from "../components/OrderHistory";
 
 interface UserProfile {
   id: string;
@@ -20,7 +21,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<'profile' | 'addresses'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders'>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
@@ -128,6 +129,13 @@ const Profile = () => {
           >
             <MapPin className="h-4 w-4" /> Addresses
           </Button>
+          <Button 
+            variant={activeTab === 'orders' ? "default" : "outline"}
+            onClick={() => setActiveTab('orders')}
+            className="flex items-center gap-2"
+          >
+            <PackageIcon className="h-4 w-4" /> Order History
+          </Button>
         </div>
 
         {activeTab === 'profile' ? (
@@ -199,10 +207,16 @@ const Profile = () => {
               </CardFooter>
             )}
           </Card>
-        ) : (
+        ) : activeTab === 'addresses' ? (
           <Card>
             <CardContent className="pt-6">
               <AddressManager />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <OrderHistory />
             </CardContent>
           </Card>
         )}
