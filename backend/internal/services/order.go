@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
@@ -208,7 +209,6 @@ func (s *OrderServiceImpl) GetAllOrders(querys request.PaginationQuery) (respons
 		Preload("Payment", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, create_at, update_at, delete_at, order_id, amount, proof").Omit("Order")
 		})
-
 	if querys.Page != nil && querys.PageSize != nil {
 		offset := *querys.Page * *querys.PageSize
 		query = query.Offset(offset).Limit(*querys.PageSize)
@@ -220,6 +220,7 @@ func (s *OrderServiceImpl) GetAllOrders(querys request.PaginationQuery) (respons
 	}
 
 	if err := query.Find(&orders).Error; err != nil {
+		fmt.Println("test", err)
 		return response.SuccessResponse{}, http.StatusInternalServerError, err
 	}
 

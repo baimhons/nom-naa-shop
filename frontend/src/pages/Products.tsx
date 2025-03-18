@@ -233,11 +233,9 @@ const Products = () => {
       }
 
       if (search) {
-        console.log("Debug - Adding search to URL:", search);
         apiUrl += `&search=${encodeURIComponent(search)}`;
       }
       
-      console.log("Debug - Final API URL:", apiUrl);
       const response = await fetch(apiUrl);
       
       if (!response.ok) {

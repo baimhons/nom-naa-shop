@@ -1,10 +1,39 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 import { Button } from "../components/ui/button";
 import { ShoppingCart } from "lucide-react";
 
 const Login = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // ... your existing login logic ...
+
+    try {
+      const response = await fetch('http://127.0.0.1:8080/api/v1/auth/login', {
+        // ... your fetch configuration ...
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // บันทึก token
+        localStorage.setItem('access_token', data.token);
+        
+        // เช็คว่าเป็น admin หรือไม่และ redirect ไปหน้าที่เหมาะสม
+        const isAdmin = data.user.UserType === 'admin' || data.user.Role === 'admin';
+        if (isAdmin) {
+          navigate('/admin');
+        } else {
+          navigate('/products');
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
       {/* Left side - Form */}

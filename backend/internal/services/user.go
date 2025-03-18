@@ -176,6 +176,7 @@ func (us *userServiceImpl) GetUserProfile(userContext models.UserContext) (resp 
 			PhoneNumber: user.PhoneNumber,
 			FirstName:   user.FirstName,
 			LastName:    user.LastName,
+			Role:        user.Role,
 		},
 	}, http.StatusOK, nil
 }

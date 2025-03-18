@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
+	"github.com/baimhons/nom-naa-shop.git/internal/dtos/response"
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
 	"github.com/baimhons/nom-naa-shop.git/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -113,7 +116,28 @@ func (h *OrderHandler) GetOrder(c *fiber.Ctx) error {
 }
 
 func (h *OrderHandler) GetAllOrders(c *fiber.Ctx) error {
-	querys := c.Locals("querys").(request.PaginationQuery)
+	page, err := strconv.Atoi(c.Query("page", "0"))
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid page parameter",
+		})
+	}
+	pageSize, err := strconv.Atoi(c.Query("page_size", "10"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid page_size parameter",
+		})
+	}
+	sort := c.Query("sort", "create_at")
+	order := c.Query("order", "desc")
+
+	querys := request.PaginationQuery{
+		Page:     &page,
+		PageSize: &pageSize,
+		Sort:     &sort,
+		Order:    &order,
+	}
 
 	response, status, err := h.orderService.GetAllOrders(querys)
 	if err != nil {

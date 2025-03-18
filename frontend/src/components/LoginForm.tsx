@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 
 const FormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(6, { message: "Password required." }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
 });
 
 const LoginForm = () => {
@@ -43,40 +43,37 @@ const LoginForm = () => {
         body: JSON.stringify(values),
       });
 
-      const responseData = await response.json();
+      const data = await response.json();
 
       if (response.ok) {
-        const { access_token, refresh_token } = responseData.data.data;
+        localStorage.setItem("access_token", data.data.data.access_token);
+        localStorage.setItem("refresh_token", data.data.data.refresh_token);
         
-        localStorage.setItem("access_token", access_token);
-        localStorage.setItem("refresh_token", refresh_token);
-        
-        console.log("Access token stored:", localStorage.getItem("access_token"));
-        
-        toast({
-          title: "Login Successful",
-          description: responseData.data.message || "You have successfully logged in.",
-        });
-        navigate("/products");
+        // Check user role and redirect based on role
+        try {
+          const decodedToken = JSON.parse(atob(data.data.data.access_token.split('.')[1]));
+          const role = decodedToken.role;
+          
+          toast.success("Login Successful");
+          
+          if (role === 'admin') {
+            navigate("/admin");
+          } else {
+            navigate("/products");
+          }
+        } catch (error) {
+          console.error("Error parsing token:", error);
+          navigate("/products");
+        }
       } else {
-        toast({
-          title: "Login Failed",
-          description: responseData.message || "Invalid credentials. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(data.message || "Invalid credentials. Please try again.");
       }
     } catch (error) {
-      toast({
-        title: "Login Error",
-        description: "An error occurred while logging in. Please try again later.",
-        variant: "destructive",
-      });
+      toast.error("An error occurred while logging in. Please try again later.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  console.log(localStorage.getItem("access_token"));
 
   return (
     <Form {...form}>
