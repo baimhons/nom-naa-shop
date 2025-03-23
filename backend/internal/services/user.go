@@ -22,7 +22,7 @@ type UserService interface {
 	LoginUser(req request.LoginUser) (resp response.SuccessResponse, statusCode int, err error)
 	LogoutUser(userContext models.UserContext) (statusCode int, err error)
 	GetUserProfile(userContext models.UserContext) (resp response.SuccessResponse, statusCode int, err error)
-	GetAllUsers() (resp response.SuccessResponse, statusCode int, err error)
+	GetAllUsers(querys request.PaginationQuery) (resp response.SuccessResponse, statusCode int, err error)
 	UpdateUser(req request.UpdateUser) (resp response.SuccessResponse, statusCode int, err error)
 	DeleteUser(id uuid.UUID) (statusCode int, err error)
 }
@@ -181,16 +181,32 @@ func (us *userServiceImpl) GetUserProfile(userContext models.UserContext) (resp 
 	}, http.StatusOK, nil
 }
 
-func (us *userServiceImpl) GetAllUsers() (resp response.SuccessResponse, statusCode int, err error) {
+func (us *userServiceImpl) GetAllUsers(querys request.PaginationQuery) (resp response.SuccessResponse, statusCode int, err error) {
 	users := []models.User{}
-	if err := us.userRepository.GetAll(&users, nil); err != nil {
+	if err := us.userRepository.GetAll(&users, &querys); err != nil {
 		return resp, http.StatusInternalServerError, err
+	}
+
+	userResponses := make([]response.AllUserResponse, len(users))
+	for i, u := range users {
+		if u.Role != "admin" {
+			userResponses[i] = response.AllUserResponse{
+				ID:          u.ID,
+				Username:    u.Username,
+				FirstName:   u.FirstName,
+				LastName:    u.LastName,
+				PhoneNumber: u.PhoneNumber,
+				Email:       u.Email,
+			}
+		}
+
 	}
 
 	return response.SuccessResponse{
 		Message: "Users fetched successfully",
-		Data:    users,
+		Data:    userResponses,
 	}, http.StatusOK, nil
+
 }
 
 func (us *userServiceImpl) UpdateUser(req request.UpdateUser) (resp response.SuccessResponse, statusCode int, err error) {

@@ -12,7 +12,7 @@ const Login = () => {
     // ... your existing login logic ...
 
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/v1/auth/login', {
+      const response = await fetch('http://127.0.0.1:8080/api/v1/user/login', {
         // ... your fetch configuration ...
       });
 
@@ -50,7 +50,14 @@ const Login = () => {
           
           <LoginForm />
           
-          <div className="text-center mt-8">
+          <div className="space-y-4 text-center mt-3">
+            <div className="text-sm mb-5">
+              <span className="text-muted-foreground">Don't have an account? </span>
+              <Link to="/register" className="text-primary font-medium hover:underline">
+                Register here
+              </Link>
+            </div>
+            
             <Link to="/products">
               <Button variant="outline" className="flex items-center gap-2">
                 <ShoppingCart size={16} />

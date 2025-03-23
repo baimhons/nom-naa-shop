@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/request"
 	"github.com/baimhons/nom-naa-shop.git/internal/dtos/response"
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
@@ -91,13 +93,36 @@ func (h *UserHandler) GetUserProfile(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
-	users, statusCode, err := h.userService.GetAllUsers()
+	page, err := strconv.Atoi(c.Query("page", "0"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid page parameter",
+		})
+	}
+	pageSize, err := strconv.Atoi(c.Query("page_size", "15"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Message: "Invalid page_size parameter",
+		})
+	}
+	sort := c.Query("sort", "create_at")
+	order := c.Query("order", "desc")
+
+	querys := request.PaginationQuery{
+		Page:     &page,
+		PageSize: &pageSize,
+		Sort:     &sort,
+		Order:    &order,
+	}
+
+	users, statusCode, err := h.userService.GetAllUsers(querys)
 	if err != nil {
 		return c.Status(statusCode).JSON(response.ErrorResponse{
 			Message: err.Error(),
 		})
 	}
 
+	// Return the filtered list of users
 	return c.Status(statusCode).JSON(response.SuccessResponse{
 		Message: "Users fetched successfully",
 		Data:    users,

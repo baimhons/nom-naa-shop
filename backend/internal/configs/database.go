@@ -6,6 +6,7 @@ import (
 
 	"github.com/baimhons/nom-naa-shop.git/internal/models"
 	"github.com/baimhons/nom-naa-shop.git/internal/scripts"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -57,10 +58,19 @@ func initalAdmin(db *gorm.DB) {
 	var adminCount int64
 	db.Model(&models.User{}).Where("role = ?", "admin").Count(&adminCount)
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(ENV.ADMIN_PASSWORD), bcrypt.DefaultCost)
+
+	if err != nil {
+		log.Fatalf("err to hash admin password : %v\n", err)
+	}
 	if adminCount == 0 {
+		if err != nil {
+			log.Fatalf("failed to hash admin password: %v\n", err)
+		}
+
 		admin := models.User{
 			Username:    "admin",
-			Password:    "4dm1n",
+			Password:    string(hashedPassword),
 			Role:        "admin",
 			Email:       "admin@gmail.com",
 			PhoneNumber: "081234567890",

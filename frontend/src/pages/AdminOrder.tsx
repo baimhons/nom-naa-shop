@@ -511,9 +511,7 @@ const AdminOrders = () => {
       
       {/* Add pagination controls */}
       <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-gray-500">
-          Showing {orders.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
-          {Math.min(currentPage * pageSize, totalOrders)} of {totalOrders} orders
+        <div className="">
         </div>
         <div className="flex items-center space-x-2">
           <Button

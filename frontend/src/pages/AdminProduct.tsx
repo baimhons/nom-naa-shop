@@ -82,7 +82,7 @@ const createProduct = async (formData: FormData) => {
 
 const updateProduct = async ({ id, formData }: { id: string; formData: FormData }) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`http://127.0.0.1:8080/api/v1/snack`, {
+  const response = await fetch(`http://127.0.0.1:8080/api/v1/snack/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,

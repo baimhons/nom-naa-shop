@@ -227,6 +227,8 @@ const Cart = () => {
       return;
     }
 
+    if (isCheckingOut) return;
+    
     setIsCheckingOut(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -240,7 +242,6 @@ const Cart = () => {
         return;
       }
 
-      // Simply redirect to orders page for confirmation
       navigate("/orders", { 
         state: { 
           fromCart: true,
@@ -254,7 +255,6 @@ const Cart = () => {
         description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsCheckingOut(false);
     }
   };
@@ -450,8 +450,19 @@ const Cart = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={confirmCheckout} disabled={isCheckingOut}>
-                      {isCheckingOut ? "Processing..." : "Confirm Order"}
+                    <AlertDialogAction 
+                      onClick={confirmCheckout} 
+                      disabled={isCheckingOut}
+                      className="cursor-not-allowed:opacity-50"
+                    >
+                      {isCheckingOut ? (
+                        <div className="flex items-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Processing...
+                        </div>
+                      ) : (
+                        "Confirm Order"
+                      )}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

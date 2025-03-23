@@ -80,6 +80,7 @@ func (s *snackServiceImpl) GetSnackByID(id uuid.UUID) (resp response.SuccessResp
 }
 
 func (s *snackServiceImpl) UpdateSnack(req request.UpdateSnackRequest, userContext models.UserContext, id uuid.UUID) (resp response.SuccessResponse, statusCode int, err error) {
+
 	if userContext.ID == "" {
 		return resp, http.StatusUnauthorized, fmt.Errorf("unauthorized user")
 	}

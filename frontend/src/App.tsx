@@ -39,23 +39,31 @@ const getUserRole = () => {
   }
 };
 
-// Protected route component
+// Protected route component for general users
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const token = localStorage.getItem('access_token');
-  
+  const role = getUserRole();
+
+  // If no token, redirect to login page
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  
+
+  // If role is not "user", restrict access to anything except login and register
+  if (requiredRole === 'user' && role !== 'user') {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Role-based checks
   if (requiredRole) {
-    const role = getUserRole();
     if (role !== requiredRole) {
       return <Navigate to="/notfound" replace />;
     }
   }
-  
+
   return children;
 };
+
 
 // Protected admin route component
 const ProtectedAdminRoute = ({ children }) => {
@@ -78,22 +86,24 @@ const App = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/products" element={<Products />} />
               <Route path="/product/:id" element={<ProductDetail />} />
+
+              {/* Protected Routes for User */}
               <Route path="/cart" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <Cart />
                 </ProtectedRoute>
               } />
               <Route path="/profile" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <Profile />
                 </ProtectedRoute>
               } />
               <Route path="/orders" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <Orders />
                 </ProtectedRoute>
               } />
-              
+
               {/* Admin Routes */}
               <Route path="/admin" element={
                 <ProtectedAdminRoute>
@@ -125,5 +135,6 @@ const App = () => {
     </BrowserRouter>
   );
 };
+
 
 export default App;
