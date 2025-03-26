@@ -470,9 +470,11 @@ const Orders = () => {
                     {selectedPaymentMethod === "qr code" && (
                       <div className="text-sm text-gray-600">
                         <p className="font-medium mb-2">QR Code Payment Instructions:</p>
-                        <p>1. Scan the QR code that will be provided after order confirmation</p>
-                        <p>2. Complete the payment using your mobile banking app</p>
-                        <p>3. Your order will be processed once payment is received</p>
+                        <img
+                            src="qr_code_payment.jpg"
+                            alt="QR Code for payment"
+                            className="w-43 h-43 object-contain border p-2"
+                          />
                       </div>
                     )}
                     {selectedPaymentMethod === "bank transfer" && (
@@ -485,6 +487,9 @@ const Orders = () => {
                       </div>
                     )}
                   </div>
+                  <p className="mt-2">
+                    <span className="text-red-600 text-lg">*</span> You need to upload proof of payment in order history
+                  </p>
                 </div>
 
                 {/* Order Items */}

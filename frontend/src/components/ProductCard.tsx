@@ -2,6 +2,7 @@ import React from "react";
 import { Star, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { number } from "zod";
 
 interface ProductCardProps {
   id: string;
@@ -57,22 +58,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         <div className="flex items-center justify-between mt-2">
           <span className="font-bold text-gray-900">฿{price.toFixed(2)}</span>
-          <div className="flex items-center">
-            <div className="flex mr-2">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className="h-4 w-4"
-                  fill={i < 4 ? "#FFC107" : "none"}
-                  stroke={i < 4 ? "#FFC107" : "#9CA3AF"}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-gray-500">4.0</span>
-          </div>
         </div>
-        
-        
       </div>
     </div>
   );

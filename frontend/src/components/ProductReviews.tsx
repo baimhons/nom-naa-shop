@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Calendar, Star, ThumbsUp, MessageSquare } from "lucide-react";
+import { User, Calendar, Star, MessageSquare, PencilLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
@@ -28,7 +28,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [sortOption, setSortOption] = useState("newest");
-  
+
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sortOption === "newest") {
       return new Date(b.CreateAt).getTime() - new Date(a.CreateAt).getTime();
@@ -51,8 +51,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
       return;
     }
 
-    const token = localStorage.getItem('access_token');
-    
+    const token = localStorage.getItem("access_token");
+
     if (!token) {
       toast({
         title: "Authentication Required",
@@ -63,19 +63,19 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      const response = await fetch("http://127.0.0.1:8080/api/v1/review", {
+      const response = await fetch("http://127.0.0.1:8080/api/v1/snack/review", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           snack_id: productId,
           rating: rating,
-          comment: newReview
-        })
+          comment: newReview,
+        }),
       });
 
       if (!response.ok) {
@@ -87,15 +87,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
         title: "Review submitted",
         description: "Your review has been successfully submitted",
       });
-      
-      // Reset form
+
       setNewReview("");
       setRating(5);
-      
-      // Refresh the page to see the new review
-      window.location.reload();
+      window.location.reload(); // refresh reviews
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to submit review";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to submit review";
       toast({
         title: "Error",
         description: errorMessage,
@@ -108,11 +106,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 mt-8">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Product Reviews ({reviews.length})</h3>
         <select
@@ -164,11 +166,43 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
                 </div>
               </div>
               <p className="mt-3 text-gray-700">{review.Comment}</p>
-             
             </div>
           ))}
         </div>
       )}
+
+      {/* ---- Add Review Form ---- */}
+      <div className="bg-gray-100 p-6 rounded-lg mt-8">
+        <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <PencilLine className="h-5 w-5" /> Write a Review
+        </h4>
+        <div className="flex items-center mb-4">
+          {[...Array(5)].map((_, index) => (
+            <Star
+              key={index}
+              className="h-6 w-6 cursor-pointer transition-all"
+              fill={index < (hoveredStar || rating) ? "#FFC107" : "none"}
+              stroke={index < (hoveredStar || rating) ? "#FFC107" : "#9CA3AF"}
+              onMouseEnter={() => setHoveredStar(index + 1)}
+              onMouseLeave={() => setHoveredStar(0)}
+              onClick={() => setRating(index + 1)}
+            />
+          ))}
+        </div>
+        <Textarea
+          placeholder="Share your thoughts about this product..."
+          value={newReview}
+          onChange={(e) => setNewReview(e.target.value)}
+          className="mb-4"
+        />
+        <Button
+          onClick={handleSubmitReview}
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          {isSubmitting ? "Submitting..." : "Submit Review"}
+        </Button>
+      </div>
     </div>
   );
 };

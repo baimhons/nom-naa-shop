@@ -280,9 +280,29 @@ const OrderHistory = () => {
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold mb-2">Order Details</h4>
-                    <p className="text-sm">Payment Method: {order.PaymentMethod}</p>
-                    <p className="text-sm">Tracking ID: {order.TrackingID}</p>
+                      <div>
+                          <h4 className="text-sm font-semibold mb-2">Order Details</h4>
+                          <p className="text-sm">Payment Method: {order.PaymentMethod}</p>
+                          <p className="text-sm">Tracking ID: {order.TrackingID}</p>
+
+                          {order.PaymentMethod === "qr code" ? (
+                            <div className="mt-4">
+                              <h5 className="text-sm font-semibold mb-2">Scan to Pay:</h5>
+                              <img
+                                src="qr_code_payment.jpg"
+                                alt="QR Code for payment"
+                                className="w-45 h-45 object-contain border p-2"
+                              />
+                            </div>
+                          ) : order.PaymentMethod === "bank transfer" ? (
+                            <div className="mt-4 bg-gray-100 p-3 rounded">
+                              <h5 className="text-sm font-semibold mb-2">Bank Transfer Details:</h5>
+                              <p className="text-sm">Bank: Kasikorn Bank</p>
+                              <p className="text-sm">Account Name: Nom-Naa Shop</p>
+                              <p className="text-sm">Account Number: 123-4-56789-0</p>
+                            </div>
+                          ) : null}
+                        </div>
                   </div>
                 </div>
                 

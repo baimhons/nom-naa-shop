@@ -189,17 +189,14 @@ func (us *userServiceImpl) GetAllUsers(querys request.PaginationQuery) (resp res
 
 	userResponses := make([]response.AllUserResponse, len(users))
 	for i, u := range users {
-		if u.Role != "admin" {
-			userResponses[i] = response.AllUserResponse{
-				ID:          u.ID,
-				Username:    u.Username,
-				FirstName:   u.FirstName,
-				LastName:    u.LastName,
-				PhoneNumber: u.PhoneNumber,
-				Email:       u.Email,
-			}
+		userResponses[i] = response.AllUserResponse{
+			ID:          u.ID,
+			Username:    u.Username,
+			FirstName:   u.FirstName,
+			LastName:    u.LastName,
+			PhoneNumber: u.PhoneNumber,
+			Email:       u.Email,
 		}
-
 	}
 
 	return response.SuccessResponse{
@@ -218,7 +215,6 @@ func (us *userServiceImpl) UpdateUser(req request.UpdateUser) (resp response.Suc
 	user.Username = req.Username
 	user.FirstName = req.FirstName
 	user.LastName = req.LastName
-	user.Email = req.Email
 	user.PhoneNumber = req.PhoneNumber
 
 	if err := us.userRepository.Update(&user); err != nil {

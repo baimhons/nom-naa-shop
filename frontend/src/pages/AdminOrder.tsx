@@ -129,7 +129,6 @@ const fetchOrders = async (params: PaginationParams): Promise<PaginatedResponse<
   }
   
   const url = `http://127.0.0.1:8080/api/v1/order?${queryParams}`;
-  console.log("Fetching orders with URL:", url);
   
   const response = await fetch(url, {
     headers: {
@@ -144,7 +143,6 @@ const fetchOrders = async (params: PaginationParams): Promise<PaginatedResponse<
   }
   
   const data = await response.json();
-  console.log("API Response:", data);
   
   return {
     data: data.data || [],
@@ -241,7 +239,7 @@ const AdminOrders = () => {
   
   // Add pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   
@@ -389,7 +387,6 @@ const AdminOrders = () => {
           <Button 
             variant="outline" 
             onClick={() => {
-              console.log("Refreshing orders data");
               queryClient.invalidateQueries({ queryKey: ["orders"] });
             }}
           >
@@ -523,36 +520,11 @@ const AdminOrders = () => {
             Previous
           </Button>
           
-          {/* Page number buttons */}
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = currentPage <= 3
-                ? i + 1
-                : currentPage >= totalPages - 2
-                  ? totalPages - 4 + i
-                  : currentPage - 2 + i;
-                  
-              if (pageNum <= 0 || pageNum > totalPages) return null;
-              
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  className="w-9"
-                  onClick={() => handlePageChange(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
-          </div>
-          
           <Button
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            
           >
             Next
           </Button>

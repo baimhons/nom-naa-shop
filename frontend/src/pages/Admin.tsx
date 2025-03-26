@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Package, ShoppingCart, Users } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Admin = () => {
+  const [totalRevenue, setTotalRevenue] = useState<number | null>(null); // To store the total revenue
   const cards = [
     {
       title: "Products",
@@ -32,6 +33,32 @@ const Admin = () => {
     },
   ];
 
+  useEffect(() => {
+    const fetchTotalRevenue = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+
+        const response = await fetch("http://127.0.0.1:8080/api/v1/order/total-revenue",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        
+        if (data && data.totalRevenue) {
+          setTotalRevenue(data.totalRevenue);  
+        }
+      } catch (error) {
+        console.error("Error fetching total revenue:", error);
+      }
+    };
+  
+    fetchTotalRevenue();
+  }, []);
+
   return (
     <AdminLayout title="Admin Dashboard">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -51,38 +78,20 @@ const Admin = () => {
           </Link>
         ))}
       </div>
-      
+
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
+        <h2 className="text-xl font-semibold mb-4">total Revenue</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-500">
-                Total Products
+                Total Revenue
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">25</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Total Orders
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Registered Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">145</div>
+              <div className="text-2xl font-bold">
+                {totalRevenue !== null ? `฿${totalRevenue.toFixed(2)}` : "Loading..."}
+              </div>
             </CardContent>
           </Card>
         </div>
