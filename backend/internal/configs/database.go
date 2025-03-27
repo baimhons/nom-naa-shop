@@ -69,11 +69,10 @@ func initalAdmin(db *gorm.DB) {
 		}
 
 		admin := models.User{
-			Username:    "admin",
-			Password:    string(hashedPassword),
-			Role:        "admin",
-			Email:       "admin@gmail.com",
-			PhoneNumber: "081234567890",
+			Username: ENV.ADMIN_USERNAME,
+			Password: string(hashedPassword),
+			Role:     ENV.ADMIN_ROLE,
+			Email:    ENV.ADMIN_EMAIL,
 		}
 
 		db.Create(&admin)

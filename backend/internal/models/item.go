@@ -6,7 +6,7 @@ import (
 
 type Item struct {
 	BaseModel
-	SnackID  uuid.UUID `gorm:"not null"`
+	SnackID  uuid.UUID `gorm:"not null;constraint:OnDelete:CASCADE;"`
 	Snack    Snack     `gorm:"foreignKey:SnackID"`
 	Quantity int       `gorm:"not null"`
 	CartID   uuid.UUID `gorm:"not null"`

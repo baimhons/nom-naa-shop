@@ -152,18 +152,6 @@ const AdminProducts = () => {
     },
   });
   
-  const deleteMutation = useMutation({
-    mutationFn: deleteProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("Product deleted successfully");
-      setIsDeleteDialogOpen(false);
-      setProductToDelete(null);
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete product: ${error.message}`);
-    },
-  });
   
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -200,10 +188,6 @@ const AdminProducts = () => {
     setIsDialogOpen(true);
   };
   
-  const handleDeleteConfirmation = (id: string) => {
-    setProductToDelete(id);
-    setIsDeleteDialogOpen(true);
-  };
   
   const handleSubmit = (values: ProductFormValues) => {
     const formData = new FormData();
@@ -310,14 +294,6 @@ const AdminProducts = () => {
                           onClick={() => handleEditProduct(product)}
                         >
                           <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-500 hover:text-red-600"
-                          onClick={() => handleDeleteConfirmation(product.ID)}
-                        >
-                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -506,14 +482,6 @@ const AdminProducts = () => {
               onClick={() => setIsDeleteDialogOpen(false)}
             >
               Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => productToDelete && deleteMutation.mutate(productToDelete)}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -143,8 +143,7 @@ const ProductDetail = () => {
     if (!snack) return "";
     return `http://127.0.0.1:8080/api/v1/snack/image/${snack.ID}`;
   };
-
-  // Add function to handle cart navigation
+  
   const handleViewCart = () => {
     navigate('/cart');
   };
