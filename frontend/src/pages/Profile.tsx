@@ -52,11 +52,14 @@ const Profile = () => {
           return;
         }
 
-        const response = await fetch("api:8080/api/v1/users/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          "http://localhost:8080/api/v1/users/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           if (response.status === 401) {

@@ -37,7 +37,7 @@ const LoginForm = () => {
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     setIsLoading(true);
     try {
-      const response = await fetch("api:8080/api/v1/users/login", {
+      const response = await fetch("http://localhost:8080/api/v1/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

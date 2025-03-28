@@ -68,18 +68,21 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("api:8080/api/v1/snack/review", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          snack_id: productId,
-          rating: rating,
-          comment: newReview,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/v1/snack/review",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            snack_id: productId,
+            rating: rating,
+            comment: newReview,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();

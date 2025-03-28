@@ -39,11 +39,14 @@ const Admin = () => {
         const token = localStorage.getItem("access_token");
         if (!token) return;
 
-        const response = await fetch("api:8080/api/v1/order/total-revenue", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          "http://localhost:8080/api/v1/order/total-revenue",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         const data = await response.json();
 
         if (data && data.totalRevenue) {

@@ -54,7 +54,7 @@ type ProductFormValues = z.infer<typeof productSchema>;
 // API functions
 const fetchProducts = async () => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("api:8080/api/v1/snack", {
+  const response = await fetch("http://localhost:8080/api/v1/snack", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -70,7 +70,7 @@ const fetchProducts = async () => {
 
 const createProduct = async (formData: FormData) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("api:8080/api/v1/snack", {
+  const response = await fetch("http://localhost:8080/api/v1/snack", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -93,7 +93,7 @@ const updateProduct = async ({
   formData: FormData;
 }) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`api:8080/api/v1/snack/${id}`, {
+  const response = await fetch(`http://localhost:8080/api/v1/snack/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -110,7 +110,7 @@ const updateProduct = async ({
 
 const deleteProduct = async (id: string) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`api:8080/api/v1/snack/${id}`, {
+  const response = await fetch(`http://localhost:8080/api/v1/snack/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -230,7 +230,7 @@ const AdminProducts = () => {
   // Get proper image URL for a product
   const getProductImageUrl = (product: any) => {
     if (!product.ID) return "https://via.placeholder.com/50?text=No+Image";
-    return `api:8080/api/v1/snack/image/${product.ID}`;
+    return `http://localhost:8080/api/v1/snack/image/${product.ID}`;
   };
 
   const filteredProducts = products.filter((product: any) =>

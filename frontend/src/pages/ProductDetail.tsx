@@ -69,7 +69,9 @@ const ProductDetail = () => {
 
       setLoading(true);
       try {
-        const response = await fetch(`api:8080/api/v1/snack/${id}`);
+        const response = await fetch(
+          `http://localhost:8080/api/v1/snack/${id}`
+        );
 
         if (!response.ok) {
           throw new Error(`Error fetching snack: ${response.status}`);
@@ -126,7 +128,7 @@ const ProductDetail = () => {
     setAdding(true);
 
     try {
-      const response = await fetch("api:8080/api/v1/cart/", {
+      const response = await fetch("http://localhost:8080/api/v1/cart/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -162,7 +164,7 @@ const ProductDetail = () => {
 
   const getSnackImage = () => {
     if (!snack) return "";
-    return `api:8080/api/v1/snack/image/${snack.ID}`;
+    return `http://localhost:8080/api/v1/snack/image/${snack.ID}`;
   };
 
   const handleViewCart = () => {

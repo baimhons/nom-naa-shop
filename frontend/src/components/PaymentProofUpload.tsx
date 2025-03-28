@@ -62,14 +62,17 @@ const PaymentProofUpload = ({
       formData.append("order_id", orderId);
       formData.append("files", file);
 
-      const response = await fetch("api:8080/api/v1/payment/create", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // Remove Content-Type header to let the browser set it with boundary
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/v1/payment/create",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Remove Content-Type header to let the browser set it with boundary
+          },
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to upload payment proof");
@@ -79,7 +82,7 @@ const PaymentProofUpload = ({
 
       // Verify the payment proof is uploaded
       const proofResponse = await fetch(
-        `api:8080/api/v1/payment/proof/${data.payment.ID}`,
+        `http://localhost:8080/api/v1/payment/proof/${data.payment.ID}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -71,7 +71,7 @@ const Cart = () => {
         return;
       }
 
-      const response = await fetch("api:8080/api/v1/cart/", {
+      const response = await fetch("http://localhost:8080/api/v1/cart/", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -134,7 +134,7 @@ const Cart = () => {
         return;
       }
 
-      const response = await fetch("api:8080/api/v1/cart/", {
+      const response = await fetch("http://localhost:8080/api/v1/cart/", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -188,13 +188,16 @@ const Cart = () => {
         return;
       }
 
-      const response = await fetch(`api:8080/api/v1/cart/${itemId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/v1/cart/${itemId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to remove item");
@@ -225,7 +228,7 @@ const Cart = () => {
   };
 
   const getSnackImage = (snack: CartItem["Snack"]) => {
-    return `api:8080/api/v1/snack/image/${snack.ID}`;
+    return `http://localhost:8080/api/v1/snack/image/${snack.ID}`;
   };
 
   const confirmCheckout = async () => {

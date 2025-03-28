@@ -10,7 +10,10 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch("api:8080/api/v1/user/login", {});
+      const response = await fetch(
+        "http://localhost:8080/api/v1/user/login",
+        {}
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -28,47 +31,52 @@ const Login: React.FC = () => {
       console.error("Login error:", error);
     }
   };
-
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-md">
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Sign in to your account
-        </h2>
-        <form className="mt-8 space-y-6">
-          <div className="-space-y-px rounded-md shadow-sm">
-            <div>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="relative block w-full rounded-t-md border-0 px-4 py-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
-                placeholder="Email address"
-              />
-            </div>
-            <div>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="relative block w-full rounded-b-md border-0 px-4 py-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
-                placeholder="Password"
-              />
-            </div>
+    <div className="min-h-screen w-full flex flex-col md:flex-row">
+      {/* Left side - Form */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 md:px-12 lg:px-16 bg-white">
+        <div className="w-full max-w-md space-y-8">
+          <div className="space-y-3 text-center animate-fade-up">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Welcome Back
+            </h1>
+            <p className="text-muted-foreground text-balance">
+              Log in to your account to shopping snack in nom naa shop.
+            </p>
           </div>
-          <div>
-            <button
-              type="submit"
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Sign in
-            </button>
+
+          <LoginForm />
+
+          <div className="space-y-4 text-center mt-3">
+            <div className="text-sm mb-5">
+              <span className="text-muted-foreground">
+                Don't have an account?{" "}
+              </span>
+              <Link
+                to="/register"
+                className="text-primary font-medium hover:underline"
+              >
+                Register here
+              </Link>
+            </div>
+
+            <Link to="/products">
+              <Button variant="outline" className="flex items-center gap-2">
+                <ShoppingCart size={16} />
+                Browse Products
+              </Button>
+            </Link>
           </div>
-        </form>
+        </div>
+      </div>
+
+      {/* Right side - Background/Image */}
+      <div className="hidden md:block flex-1 bg-gradient-to-br from-primary/90 to-primary/30">
+        <img
+          src="/snack_login_page_test.jpg"
+          alt="Snack Banner"
+          className="w-full h-full object-cover"
+        />
       </div>
     </div>
   );
