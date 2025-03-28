@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { ShoppingCart, Trash, Plus, Minus, ArrowLeft, ShoppingBag } from "lucide-react";
+import {
+  ShoppingCart,
+  Trash,
+  Plus,
+  Minus,
+  ArrowLeft,
+  ShoppingBag,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -52,50 +59,50 @@ const Cart = () => {
   const fetchCart = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      
+      const token = localStorage.getItem("access_token");
+
       if (!token) {
         toast({
           title: "Authentication Error",
           description: "You need to be logged in to view your cart",
           variant: "destructive",
         });
-        navigate('/login');
+        navigate("/login");
         return;
       }
-      
-      const response = await fetch("http://127.0.0.1:8080/api/v1/cart/", {
+
+      const response = await fetch("api:8080/api/v1/cart/", {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
           toast({
             title: "Session Expired",
             description: "Your login session has expired. Please log in again.",
             variant: "destructive",
           });
-          navigate('/login');
+          navigate("/login");
           return;
         }
         throw new Error(`Failed to fetch cart: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Cart data:', data);
+      console.log("Cart data:", data);
       if (data && data.data) {
         setCart(data.data);
       } else {
-        throw new Error('Invalid cart data structure');
+        throw new Error("Invalid cart data structure");
       }
     } catch (err) {
-      console.error('Cart fetch error:', err);
+      console.error("Cart fetch error:", err);
       toast({
         title: "Error",
         description: "Failed to fetch cart",
@@ -106,46 +113,50 @@ const Cart = () => {
     }
   };
 
-  const updateItemQuantity = async (itemId: string, snackId: string, newQuantity: number) => {
+  const updateItemQuantity = async (
+    itemId: string,
+    snackId: string,
+    newQuantity: number
+  ) => {
     if (newQuantity < 1) return;
-    
+
     setUpdatingItemId(itemId);
     try {
-      const token = localStorage.getItem('access_token');
-      
+      const token = localStorage.getItem("access_token");
+
       if (!token) {
         toast({
           title: "Authentication Error",
           description: "You need to be logged in to update your cart",
           variant: "destructive",
         });
-        navigate('/login');
+        navigate("/login");
         return;
       }
-      
-      const response = await fetch("http://127.0.0.1:8080/api/v1/cart/", {
+
+      const response = await fetch("api:8080/api/v1/cart/", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           item_id: itemId,
           snack_id: snackId,
-          quantity: newQuantity
-        })
+          quantity: newQuantity,
+        }),
       });
 
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
           toast({
             title: "Session Expired",
             description: "Your login session has expired. Please log in again.",
             variant: "destructive",
           });
-          navigate('/login');
+          navigate("/login");
           return;
         }
         throw new Error("Failed to update item quantity");
@@ -166,23 +177,23 @@ const Cart = () => {
   const removeItem = async (itemId: string) => {
     setDeletingItemId(itemId);
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       if (!token) {
         toast({
           title: "Authentication Error",
           description: "You need to be logged in to remove items",
           variant: "destructive",
         });
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
-      const response = await fetch(`http://127.0.0.1:8080/api/v1/cart/${itemId}`, {
+      const response = await fetch(`api:8080/api/v1/cart/${itemId}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {
@@ -190,7 +201,7 @@ const Cart = () => {
       }
 
       await fetchCart();
-      
+
       toast({
         title: "Success",
         description: "Item removed from cart",
@@ -209,12 +220,12 @@ const Cart = () => {
   const calculateSubtotal = () => {
     if (!cart?.Items) return 0;
     return cart.Items.reduce((total, item) => {
-      return total + (item.Snack.Price * item.Quantity);
+      return total + item.Snack.Price * item.Quantity;
     }, 0);
   };
 
-  const getSnackImage = (snack: CartItem['Snack']) => {
-    return `http://127.0.0.1:8080/api/v1/snack/image/${snack.ID}`;
+  const getSnackImage = (snack: CartItem["Snack"]) => {
+    return `api:8080/api/v1/snack/image/${snack.ID}`;
   };
 
   const confirmCheckout = async () => {
@@ -228,7 +239,7 @@ const Cart = () => {
     }
 
     if (isCheckingOut) return;
-    
+
     setIsCheckingOut(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -242,11 +253,11 @@ const Cart = () => {
         return;
       }
 
-      navigate("/orders", { 
-        state: { 
+      navigate("/orders", {
+        state: {
           fromCart: true,
-          cartId: cart.ID 
-        } 
+          cartId: cart.ID,
+        },
       });
     } catch (error) {
       console.error("Error during checkout:", error);
@@ -278,8 +289,12 @@ const Cart = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="py-12 text-center">
               <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-medium text-gray-900 mb-1">Your cart is empty</h2>
-              <p className="text-gray-500 mb-6">Looks like you haven't added any snacks to your cart yet.</p>
+              <h2 className="text-xl font-medium text-gray-900 mb-1">
+                Your cart is empty
+              </h2>
+              <p className="text-gray-500 mb-6">
+                Looks like you haven't added any snacks to your cart yet.
+              </p>
               <Link to="/products">
                 <Button className="mt-2">Browse Products</Button>
               </Link>
@@ -294,12 +309,15 @@ const Cart = () => {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <Link to="/products" className="flex items-center text-primary hover:underline">
+          <Link
+            to="/products"
+            className="flex items-center text-primary hover:underline"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Products
           </Link>
         </div>
-        
+
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-2/3">
             <div className="bg-white rounded-lg shadow-sm p-6">
@@ -309,49 +327,66 @@ const Cart = () => {
                   Shopping Cart
                 </h1>
                 <span className="text-gray-500">
-                  {cart.Items.length} {cart.Items.length === 1 ? 'item' : 'items'}
+                  {cart.Items.length}{" "}
+                  {cart.Items.length === 1 ? "item" : "items"}
                 </span>
               </div>
-              
+
               {cart.Items.map((item) => (
                 <div key={item.ID} className="mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
                     <div className="col-span-2 flex items-center space-x-4">
                       <div className="h-20 w-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                        <img 
-                          src={getSnackImage(item.Snack)} 
+                        <img
+                          src={getSnackImage(item.Snack)}
                           alt={item.Snack.Name}
                           className="h-full w-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder.png";
+                            (e.target as HTMLImageElement).src =
+                              "/placeholder.png";
                           }}
                         />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{item.Snack.Name}</h3>
-                        <p className="text-sm text-gray-500">{item.Snack.Type}</p>
+                        <h3 className="font-medium text-gray-900">
+                          {item.Snack.Name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {item.Snack.Type}
+                        </p>
                         {item.Snack.Quantity <= 10 ? (
                           <span className="text-sm text-red-400">
-                            {item.Snack.Quantity} item{item.Snack.Quantity > 1 ? 's' : ''} left!
+                            {item.Snack.Quantity} item
+                            {item.Snack.Quantity > 1 ? "s" : ""} left!
                           </span>
                         ) : (
                           <span className="text-sm text-gray-500"></span>
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="text-center">
-                      <span className="md:hidden font-medium text-gray-500 mr-2">Price:</span>
+                      <span className="md:hidden font-medium text-gray-500 mr-2">
+                        Price:
+                      </span>
                       ฿{item.Snack.Price.toFixed(2)}
                     </div>
-                    
+
                     <div className="text-right">
                       <div className="flex flex-col items-end">
                         <div className="flex items-center border border-gray-300 rounded-md">
                           <button
-                            className="px-2 py-1 text-gray-600 hover:bg-gray-100" 
-                            onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity - 1)}
-                            disabled={updatingItemId === item.ID || item.Quantity <= 1}
+                            className="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                            onClick={() =>
+                              updateItemQuantity(
+                                item.ID,
+                                item.SnackID,
+                                item.Quantity - 1
+                              )
+                            }
+                            disabled={
+                              updatingItemId === item.ID || item.Quantity <= 1
+                            }
                           >
                             <Minus className="h-4 w-4" />
                           </button>
@@ -362,15 +397,31 @@ const Cart = () => {
                             value={item.Quantity}
                             onChange={(e) => {
                               const value = parseInt(e.target.value) || 1;
-                              const newQuantity = Math.min(Math.max(value, 1), item.Snack.Quantity);
-                              updateItemQuantity(item.ID, item.SnackID, newQuantity);
+                              const newQuantity = Math.min(
+                                Math.max(value, 1),
+                                item.Snack.Quantity
+                              );
+                              updateItemQuantity(
+                                item.ID,
+                                item.SnackID,
+                                newQuantity
+                              );
                             }}
                             className="w-16 text-center px-2 py-1 border-none focus:outline-none"
                           />
                           <button
                             className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-                            onClick={() => updateItemQuantity(item.ID, item.SnackID, item.Quantity + 1)}
-                            disabled={updatingItemId === item.ID || item.Quantity >= item.Snack.Quantity}
+                            onClick={() =>
+                              updateItemQuantity(
+                                item.ID,
+                                item.SnackID,
+                                item.Quantity + 1
+                              )
+                            }
+                            disabled={
+                              updatingItemId === item.ID ||
+                              item.Quantity >= item.Snack.Quantity
+                            }
                           >
                             <Plus className="h-4 w-4" />
                           </button>
@@ -378,14 +429,18 @@ const Cart = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="md:hidden font-medium text-gray-500 mr-2">Subtotal:</span>
-                      <span className="font-medium">฿{(item.Snack.Price * item.Quantity).toFixed(2)}</span>
+                      <span className="md:hidden font-medium text-gray-500 mr-2">
+                        Subtotal:
+                      </span>
+                      <span className="font-medium">
+                        ฿{(item.Snack.Price * item.Quantity).toFixed(2)}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <Separator className="mt-6" />
                   <div className="flex justify-end mt-4">
-                    <button 
+                    <button
                       onClick={() => removeItem(item.ID)}
                       className="flex items-center text-sm text-red-500 hover:text-red-700"
                       disabled={deletingItemId === item.ID}
@@ -407,15 +462,17 @@ const Cart = () => {
               ))}
             </div>
           </div>
-          
+
           <div className="w-full lg:w-1/3">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
               <h2 className="text-lg font-bold mb-4">Order Summary</h2>
-              
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">฿{calculateSubtotal().toFixed(2)}</span>
+                  <span className="font-medium">
+                    ฿{calculateSubtotal().toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
@@ -427,7 +484,7 @@ const Cart = () => {
                   <span>฿{calculateSubtotal().toFixed(2)}</span>
                 </div>
               </div>
-              
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button className="w-full" disabled={isCheckingOut}>
@@ -445,13 +502,14 @@ const Cart = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Order</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to place this order for ฿{calculateSubtotal().toFixed(2)}?
+                      Are you sure you want to place this order for ฿
+                      {calculateSubtotal().toFixed(2)}?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={confirmCheckout} 
+                    <AlertDialogAction
+                      onClick={confirmCheckout}
                       disabled={isCheckingOut}
                       className="cursor-not-allowed:opacity-50"
                     >
@@ -467,7 +525,7 @@ const Cart = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              
+
               <p className="text-xs text-gray-500 mt-4 text-center">
                 Taxes and shipping calculated at checkout
               </p>

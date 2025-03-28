@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, Search, Filter, ShoppingCart, Star, Package, LogIn, LogOut, User } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Filter,
+  ShoppingCart,
+  Star,
+  Package,
+  LogIn,
+  LogOut,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
 
@@ -73,60 +84,60 @@ const Products = () => {
   }, [searchParams]); // Only depend on searchParams
 
   const checkAuthStatus = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     setIsLoggedIn(!!token);
-    
+
     if (token) {
       try {
-        const response = await fetch('http://127.0.0.1:8080/api/v1/users/profile', {
+        const response = await fetch("api:8080/api/v1/users/profile", {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setUser(data.data);
         } else {
           // Token is invalid or expired
           setIsLoggedIn(false);
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
         }
       } catch (error) {
-        console.error('Error checking auth status:', error);
+        console.error("Error checking auth status:", error);
       }
     }
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (!token) return;
-    
+
     setIsLoggingOut(true);
-    
+
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/v1/users/logout', {
-        method: 'POST',
+      const response = await fetch("api:8080/api/v1/users/logout", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       if (response.ok) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         setIsLoggedIn(false);
         setUser(null);
         setCart(null);
         setCartItems(new Map());
-        
+
         toast({
           title: "Logged out successfully",
           description: "You have been logged out of your account",
         });
       } else {
-        throw new Error('Logout failed');
+        throw new Error("Logout failed");
       }
     } catch (error) {
       toast({
@@ -141,8 +152,10 @@ const Products = () => {
 
   const checkNextPage = async (currentPage: number) => {
     try {
-      let nextPageUrl = `http://127.0.0.1:8080/api/v1/snack?page=${currentPage + 1}&page_size=${pageSize}&sort=${sort}&order=${order}`;
-      
+      let nextPageUrl = `api:8080/api/v1/snack?page=${
+        currentPage + 1
+      }&page_size=${pageSize}&sort=${sort}&order=${order}`;
+
       if (selectedType) {
         nextPageUrl += `&type=${encodeURIComponent(selectedType)}`;
       }
@@ -150,13 +163,13 @@ const Products = () => {
       if (search) {
         nextPageUrl += `&search=${encodeURIComponent(search)}`;
       }
-      
+
       const response = await fetch(nextPageUrl);
-      
+
       if (!response.ok) {
         return false;
       }
-      
+
       const data: ApiResponse = await response.json();
       return data.data && Array.isArray(data.data) && data.data.length > 0;
     } catch (err) {
@@ -166,16 +179,16 @@ const Products = () => {
 
   const fetchAllTypes = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/v1/snack/types');
+      const response = await fetch("api:8080/api/v1/snack/types");
       if (!response.ok) {
-        throw new Error('Failed to fetch snack types');
+        throw new Error("Failed to fetch snack types");
       }
       const data = await response.json();
       if (data.data && Array.isArray(data.data)) {
         setTypes(data.data);
       }
     } catch (err) {
-      console.error('Error fetching snack types:', err);
+      console.error("Error fetching snack types:", err);
     }
   };
 
@@ -186,13 +199,13 @@ const Products = () => {
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = event.target.value;
     const newSearchParams = new URLSearchParams(searchParams);
-    
+
     if (searchTerm) {
       newSearchParams.set("search", searchTerm);
     } else {
       newSearchParams.delete("search");
     }
-    
+
     // Reset to first page when searching
     newSearchParams.set("page", "0");
     setSearchParams(newSearchParams);
@@ -204,7 +217,7 @@ const Products = () => {
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const newSearchParams = new URLSearchParams(searchParams);
-    
+
     if (searchInput.trim()) {
       newSearchParams.set("search", searchInput.trim());
       newSearchParams.set("page", "0"); // Reset to first page when searching
@@ -217,7 +230,9 @@ const Products = () => {
     }
   };
 
-  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setSearchInput(event.target.value);
   };
 
@@ -226,8 +241,8 @@ const Products = () => {
     setError("");
     setIsCheckingNextPage(true);
     try {
-      let apiUrl = `http://127.0.0.1:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=${sort}&order=${order}`;
-      
+      let apiUrl = `api:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=${sort}&order=${order}`;
+
       if (selectedType) {
         apiUrl += `&type=${encodeURIComponent(selectedType)}`;
       }
@@ -235,9 +250,9 @@ const Products = () => {
       if (search) {
         apiUrl += `&search=${encodeURIComponent(search)}`;
       }
-      
+
       const response = await fetch(apiUrl);
-      
+
       if (!response.ok) {
         if (response.status === 429) {
           toast({
@@ -245,23 +260,25 @@ const Products = () => {
             description: "Please wait a moment before trying again",
             variant: "destructive",
           });
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise((resolve) => setTimeout(resolve, 5000));
           return fetchSnacks();
         }
         throw new Error(`Error fetching snacks: ${response.status}`);
       }
-      
+
       const data: ApiResponse = await response.json();
-      
+
       if (data.data && Array.isArray(data.data)) {
         setSnacks(data.data);
         setTotalCount(data.total_count || data.data.length);
-        const totalPages = Math.ceil((data.total_count || data.data.length) / pageSize);
+        const totalPages = Math.ceil(
+          (data.total_count || data.data.length) / pageSize
+        );
         setTotalPages(totalPages);
-        
+
         // Check if current page is the last page or if there are no more items
         const isLastPage = page >= totalPages - 1;
-        const hasNextPage = !isLastPage && await checkNextPage(page);
+        const hasNextPage = !isLastPage && (await checkNextPage(page));
         setHasMore(hasNextPage);
       } else {
         setSnacks([]);
@@ -283,26 +300,26 @@ const Products = () => {
   const fetchCart = async () => {
     setLoadingCart(true);
     try {
-      const token = localStorage.getItem('access_token');
-      
+      const token = localStorage.getItem("access_token");
+
       if (!token) {
         // If no token, we don't show an error as the user might be browsing without logging in
         setLoadingCart(false);
         return;
       }
-      
-      const response = await fetch("http://127.0.0.1:8080/api/v1/cart/", {
+
+      const response = await fetch("api:8080/api/v1/cart/", {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
         if (response.status === 401) {
           // If unauthorized, clear tokens and update login state
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
           setIsLoggedIn(false);
           setUser(null);
           return;
@@ -312,7 +329,7 @@ const Products = () => {
 
       const data = await response.json();
       setCart(data.data);
-      
+
       const newCartItems = new Map<string, number>();
       data.data.Items?.forEach((item: CartItem) => {
         newCartItems.set(item.SnackID, item.Quantity);
@@ -343,7 +360,7 @@ const Products = () => {
 
   const updateSearchParams = (params: Record<string, string>) => {
     const newSearchParams = new URLSearchParams(searchParams);
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
         newSearchParams.set(key, value);
@@ -351,16 +368,16 @@ const Products = () => {
         newSearchParams.delete(key);
       }
     });
-    
+
     setSearchParams(newSearchParams);
   };
 
   const fetchProfile = async () => {
-    const token = localStorage.getItem('access_token');
-    const response = await fetch('http://127.0.0.1:8080/api/v1/users/profile', {
+    const token = localStorage.getItem("access_token");
+    const response = await fetch("api:8080/api/v1/users/profile", {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (response.ok) {
@@ -385,30 +402,30 @@ const Products = () => {
 
   const handleAddToCart = async (snackId: string) => {
     try {
-      const token = localStorage.getItem('access_token');
-      
+      const token = localStorage.getItem("access_token");
+
       if (!token) {
         toast({
           title: "Authentication Required",
           description: "Please login to add items to your cart",
           variant: "destructive",
         });
-        navigate('/login');
+        navigate("/login");
         return;
       }
-      
-      setAddingToCartIds(prev => [...prev, snackId]);
-      
-      const response = await fetch("http://127.0.0.1:8080/api/v1/cart/", {
+
+      setAddingToCartIds((prev) => [...prev, snackId]);
+
+      const response = await fetch("api:8080/api/v1/cart/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           quantity: 1,
-          snack_id: snackId
-        })
+          snack_id: snackId,
+        }),
       });
 
       if (!response.ok) {
@@ -417,51 +434,62 @@ const Products = () => {
       }
 
       await fetchCart();
-      
+
       toast({
         title: "Added to cart",
         description: "Item has been added to your cart",
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to add item to cart";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add item to cart";
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
       });
     } finally {
-      setAddingToCartIds(prev => prev.filter(id => id !== snackId));
+      setAddingToCartIds((prev) => prev.filter((id) => id !== snackId));
     }
   };
 
   const getSnackImage = (snack: Snack) => {
     // First try to use the Image URL if it exists and is a full URL
-    if (snack.Image && typeof snack.Image === 'string' && snack.Image.startsWith('http')) {
+    if (
+      snack.Image &&
+      typeof snack.Image === "string" &&
+      snack.Image.startsWith("http")
+    ) {
       return snack.Image;
     }
 
     // If Image is a base64 string, use it directly
-    if (snack.Image && typeof snack.Image === 'string' && snack.Image.startsWith('data:image')) {
+    if (
+      snack.Image &&
+      typeof snack.Image === "string" &&
+      snack.Image.startsWith("data:image")
+    ) {
       return snack.Image;
     }
 
     // Then try the API endpoint for byte array images
     try {
-      return `http://127.0.0.1:8080/api/v1/snack/image/${encodeURIComponent(snack.ID)}`;
+      return `api:8080/api/v1/snack/image/${encodeURIComponent(snack.ID)}`;
     } catch (error) {
-      console.error('Error getting snack image:', error);
-      return '/placeholder.png';
+      console.error("Error getting snack image:", error);
+      return "/placeholder.png";
     }
   };
 
   const fallbackImageUrl = "/placeholder.png";
 
-  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleImageError = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>
+  ) => {
     const img = event.target as HTMLImageElement;
     if (!img.src.includes(fallbackImageUrl)) {
-      console.error('Image failed to load:', img.src);
+      console.error("Image failed to load:", img.src);
       img.src = fallbackImageUrl;
-      img.classList.add('image-fallback');
+      img.classList.add("image-fallback");
     }
   };
 
@@ -470,24 +498,24 @@ const Products = () => {
   };
 
   const handleViewCart = () => {
-    const token = localStorage.getItem('access_token');
-    
+    const token = localStorage.getItem("access_token");
+
     if (!token) {
       toast({
         title: "Authentication Error",
         description: "You need to be logged in to view your cart",
         variant: "destructive",
       });
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
     // If token exists, navigate to cart
-    navigate('/cart');
+    navigate("/cart");
   };
 
   const handleSortChange = (value: string) => {
-    const [newSort, newOrder] = value.split('-');
+    const [newSort, newOrder] = value.split("-");
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set("sort", newSort);
     newSearchParams.set("order", newOrder);
@@ -498,26 +526,33 @@ const Products = () => {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <div className="bg-white shadow-sm py-3 px-4 sm:px-6 lg:px-8 mb-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold text-primary">Nom Naa Shop</Link>
+          <Link to="/" className="text-2xl font-bold text-primary">
+            Nom Naa Shop
+          </Link>
           <div className="flex items-center gap-4">
             {isLoggedIn && user ? (
               <>
                 <Link to="/cart" className="flex items-center gap-1">
                   <ShoppingCart className="h-5 w-5 text-gray-600" />
                   <span className="text-sm font-medium">
-                    {Array.from(cartItems.values()).reduce((sum, qty) => sum + qty, 0) || 0}
+                    {Array.from(cartItems.values()).reduce(
+                      (sum, qty) => sum + qty,
+                      0
+                    ) || 0}
                   </span>
                 </Link>
                 <div className="flex items-center gap-2">
-                  <Link 
-                    to="/profile" 
+                  <Link
+                    to="/profile"
                     className="flex items-center gap-2 hover:text-primary transition-colors"
                   >
                     <User className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium mr-2">{user.Name || user.Email}</span>
+                    <span className="text-sm font-medium mr-2">
+                      {user.Name || user.Email}
+                    </span>
                   </Link>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={handleLogout}
                     disabled={isLoggingOut}
@@ -538,10 +573,10 @@ const Products = () => {
                 </div>
               </>
             ) : (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 className="flex items-center gap-1"
               >
                 <LogIn className="h-4 w-4" />
@@ -560,7 +595,8 @@ const Products = () => {
               <span className="block text-primary">For Every Craving</span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Discover our wide selection of tasty treats, from crispy chips to sweet delights
+              Discover our wide selection of tasty treats, from crispy chips to
+              sweet delights
             </p>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
               <form onSubmit={handleSearchSubmit} className="w-full">
@@ -591,7 +627,11 @@ const Products = () => {
                 <span className="font-medium">Loading cart...</span>
               ) : (
                 <span className="font-medium">
-                  {Array.from(cartItems.values()).reduce((sum, qty) => sum + qty, 0)} items in cart
+                  {Array.from(cartItems.values()).reduce(
+                    (sum, qty) => sum + qty,
+                    0
+                  )}{" "}
+                  items in cart
                 </span>
               )}
             </div>
@@ -601,10 +641,7 @@ const Products = () => {
               </div>
             )}
           </div>
-          <Button 
-            onClick={handleViewCart}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={handleViewCart} className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
             View Cart
           </Button>
@@ -617,10 +654,12 @@ const Products = () => {
                 <Filter className="h-5 w-5 text-primary" />
                 Filters
               </h2>
-              
+
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Snack Type</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    Snack Type
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <input
@@ -631,12 +670,15 @@ const Products = () => {
                         onChange={() => handleTypeChange("")}
                         className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
                       />
-                      <label htmlFor="all-types" className="ml-2 text-sm text-gray-700">
+                      <label
+                        htmlFor="all-types"
+                        className="ml-2 text-sm text-gray-700"
+                      >
                         All Types
                       </label>
                     </div>
-                    
-                    {types.map(type => (
+
+                    {types.map((type) => (
                       <div key={type} className="flex items-center">
                         <input
                           id={`type-${type}`}
@@ -646,16 +688,21 @@ const Products = () => {
                           onChange={() => handleTypeChange(type)}
                           className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
                         />
-                        <label htmlFor={`type-${type}`} className="ml-2 text-sm text-gray-700">
+                        <label
+                          htmlFor={`type-${type}`}
+                          className="ml-2 text-sm text-gray-700"
+                        >
                           {type}
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="pt-4 border-t border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Sort By</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    Sort By
+                  </h3>
                   <select
                     value={`${sort}-${order}`}
                     onChange={(e) => handleSortChange(e.target.value)}
@@ -675,7 +722,10 @@ const Products = () => {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
                 {[...Array(12)].map((_, index) => (
-                  <div key={index} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
+                  <div
+                    key={index}
+                    className="bg-white rounded-lg shadow-sm p-4 animate-pulse"
+                  >
                     <div className="w-full h-48 bg-gray-200 rounded-md"></div>
                     <div className="h-6 bg-gray-200 rounded mt-4 w-3/4"></div>
                     <div className="h-4 bg-gray-200 rounded mt-2 w-1/2"></div>
@@ -686,17 +736,16 @@ const Products = () => {
             ) : error ? (
               <div className="text-center py-10">
                 <p className="text-red-500">{error}</p>
-                <Button 
-                  onClick={fetchSnacks} 
-                  className="mt-4"
-                >
+                <Button onClick={fetchSnacks} className="mt-4">
                   Try Again
                 </Button>
               </div>
             ) : snacks.length === 0 ? (
               <div className="text-center py-10">
                 <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900">No snacks found</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  No snacks found
+                </h3>
                 <p className="mt-1 text-gray-500">
                   Try changing your filters or check back later for new items.
                 </p>
@@ -720,19 +769,21 @@ const Products = () => {
                 </div>
 
                 <div className="flex items-center justify-between mt-8">
-                  <Button 
-                    variant="outline" 
-                    onClick={handlePrevPage} 
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevPage}
                     disabled={page === 0}
                     className="flex items-center gap-1"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Previous
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleNextPage} 
-                    disabled={!hasMore || isCheckingNextPage || snacks.length < pageSize}
+                  <Button
+                    variant="outline"
+                    onClick={handleNextPage}
+                    disabled={
+                      !hasMore || isCheckingNextPage || snacks.length < pageSize
+                    }
                     className="flex items-center gap-1"
                   >
                     {isCheckingNextPage ? (

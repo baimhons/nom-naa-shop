@@ -38,9 +38,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 const productSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   price: z.coerce.number().positive({ message: "Price must be positive" }),
-  quantity: z.coerce.number().int().positive({ message: "Quantity must be a positive integer" }),
+  quantity: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Quantity must be a positive integer" }),
   type: z.string().min(2, { message: "Type must be at least 2 characters" }),
-  description: z.string().min(5, { message: "Description must be at least 5 characters" }),
+  description: z
+    .string()
+    .min(5, { message: "Description must be at least 5 characters" }),
   image: z.instanceof(File).optional(),
 });
 
@@ -49,67 +54,73 @@ type ProductFormValues = z.infer<typeof productSchema>;
 // API functions
 const fetchProducts = async () => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("http://127.0.0.1:8080/api/v1/snack", {
+  const response = await fetch("api:8080/api/v1/snack", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to fetch products");
   }
-  
+
   const data = await response.json();
   return data.data;
 };
 
 const createProduct = async (formData: FormData) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("http://127.0.0.1:8080/api/v1/snack", {
+  const response = await fetch("api:8080/api/v1/snack", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: formData,
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to create product");
   }
-  
+
   return response.json();
 };
 
-const updateProduct = async ({ id, formData }: { id: string; formData: FormData }) => {
+const updateProduct = async ({
+  id,
+  formData,
+}: {
+  id: string;
+  formData: FormData;
+}) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`http://127.0.0.1:8080/api/v1/snack/${id}`, {
+  const response = await fetch(`api:8080/api/v1/snack/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: formData,
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to update product");
   }
-  
+
   return response.json();
 };
 
 const deleteProduct = async (id: string) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`http://127.0.0.1:8080/api/v1/snack/${id}`, {
+  const response = await fetch(`api:8080/api/v1/snack/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to delete product");
   }
-  
+
   return response.json();
 };
 
@@ -119,14 +130,18 @@ const AdminProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
-  
+
   const queryClient = useQueryClient();
-  
-  const { data: products = [], isLoading, error } = useQuery({
+
+  const {
+    data: products = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["products"],
     queryFn: fetchProducts,
   });
-  
+
   const createMutation = useMutation({
     mutationFn: createProduct,
     onSuccess: () => {
@@ -138,7 +153,7 @@ const AdminProducts = () => {
       toast.error(`Failed to create product: ${error.message}`);
     },
   });
-  
+
   const updateMutation = useMutation({
     mutationFn: updateProduct,
     onSuccess: () => {
@@ -151,8 +166,7 @@ const AdminProducts = () => {
       toast.error(`Failed to update product: ${error.message}`);
     },
   });
-  
-  
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -163,7 +177,7 @@ const AdminProducts = () => {
       description: "",
     },
   });
-  
+
   const handleCreateProduct = () => {
     setEditingProduct(null);
     form.reset({
@@ -175,7 +189,7 @@ const AdminProducts = () => {
     });
     setIsDialogOpen(true);
   };
-  
+
   const handleEditProduct = (product: any) => {
     setEditingProduct(product);
     form.reset({
@@ -187,43 +201,42 @@ const AdminProducts = () => {
     });
     setIsDialogOpen(true);
   };
-  
-  
+
   const handleSubmit = (values: ProductFormValues) => {
     const formData = new FormData();
-    
+
     if (editingProduct) {
       // For updates, we need to include the ID
       formData.append("id", editingProduct.ID);
     }
-    
+
     formData.append("name", values.name);
     formData.append("price", values.price.toString());
     formData.append("quantity", values.quantity.toString());
     formData.append("type", values.type);
     formData.append("description", values.description);
-    
+
     if (values.image) {
       formData.append("files", values.image);
     }
-    
+
     if (editingProduct) {
       updateMutation.mutate({ id: editingProduct.ID, formData });
     } else {
       createMutation.mutate(formData);
     }
   };
-  
+
   // Get proper image URL for a product
   const getProductImageUrl = (product: any) => {
     if (!product.ID) return "https://via.placeholder.com/50?text=No+Image";
-    return `http://127.0.0.1:8080/api/v1/snack/image/${product.ID}`;
+    return `api:8080/api/v1/snack/image/${product.ID}`;
   };
-  
+
   const filteredProducts = products.filter((product: any) =>
     product.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   return (
     <AdminLayout title="Manage Products">
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -241,7 +254,7 @@ const AdminProducts = () => {
           <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </div>
-      
+
       {isLoading ? (
         <div className="text-center py-10">Loading products...</div>
       ) : error ? (
@@ -282,7 +295,9 @@ const AdminProducts = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{product.Name}</TableCell>
+                    <TableCell className="font-medium">
+                      {product.Name}
+                    </TableCell>
                     <TableCell>฿{product.Price.toFixed(2)}</TableCell>
                     <TableCell>{product.Quantity}</TableCell>
                     <TableCell>{product.Type}</TableCell>
@@ -304,7 +319,7 @@ const AdminProducts = () => {
           </Table>
         </div>
       )}
-      
+
       {/* Product Form Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
@@ -318,9 +333,12 @@ const AdminProducts = () => {
                 : "Fill in the details for the new product."}
             </DialogDescription>
           </DialogHeader>
-          
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-5"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -334,7 +352,7 @@ const AdminProducts = () => {
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -355,7 +373,7 @@ const AdminProducts = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="quantity"
@@ -376,7 +394,7 @@ const AdminProducts = () => {
                   )}
                 />
               </div>
-              
+
               <FormField
                 control={form.control}
                 name="type"
@@ -390,7 +408,7 @@ const AdminProducts = () => {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="description"
@@ -408,7 +426,7 @@ const AdminProducts = () => {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="image"
@@ -429,7 +447,9 @@ const AdminProducts = () => {
                     <FormMessage />
                     {editingProduct?.ID && (
                       <div className="mt-2">
-                        <p className="text-sm text-gray-500 mb-1">Current image:</p>
+                        <p className="text-sm text-gray-500 mb-1">
+                          Current image:
+                        </p>
                         <img
                           src={getProductImageUrl(editingProduct)}
                           alt="Current product"
@@ -444,7 +464,7 @@ const AdminProducts = () => {
                   </FormItem>
                 )}
               />
-              
+
               <DialogFooter>
                 <Button
                   type="button"
@@ -453,7 +473,12 @@ const AdminProducts = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                >
                   {createMutation.isPending || updateMutation.isPending
                     ? "Saving..."
                     : editingProduct
@@ -465,14 +490,15 @@ const AdminProducts = () => {
           </Form>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this product? This action cannot be undone.
+              Are you sure you want to delete this product? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

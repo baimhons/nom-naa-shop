@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Upload, Check, Loader2, X } from "lucide-react";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -17,7 +17,10 @@ interface PaymentProofUploadProps {
   onSuccess?: () => void;
 }
 
-const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => {
+const PaymentProofUpload = ({
+  orderId,
+  onSuccess,
+}: PaymentProofUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -28,7 +31,7 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -59,13 +62,13 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
       formData.append("order_id", orderId);
       formData.append("files", file);
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/payment/create", {
+      const response = await fetch("api:8080/api/v1/payment/create", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           // Remove Content-Type header to let the browser set it with boundary
         },
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -73,14 +76,17 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
       }
 
       const data = await response.json();
-      
+
       // Verify the payment proof is uploaded
-      const proofResponse = await fetch(`http://127.0.0.1:8080/api/v1/payment/proof/${data.payment.ID}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Accept": "image/*"
+      const proofResponse = await fetch(
+        `api:8080/api/v1/payment/proof/${data.payment.ID}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "image/*",
+          },
         }
-      });
+      );
 
       if (!proofResponse.ok) {
         throw new Error("Failed to verify payment proof upload");
@@ -96,7 +102,7 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
       setFile(null);
       setPreview(null);
       setIsOpen(false);
-      
+
       // Trigger callback if provided
       if (onSuccess) {
         onSuccess();
@@ -105,7 +111,10 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
       console.error("Error uploading payment proof:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to upload payment proof",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to upload payment proof",
         variant: "destructive",
       });
     } finally {
@@ -117,7 +126,7 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
     setFile(null);
     setPreview(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -153,12 +162,12 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
           {preview && (
             <div className="relative">
               <div className="relative border rounded-md overflow-hidden">
-                <img 
-                  src={preview} 
-                  alt="Payment proof preview" 
+                <img
+                  src={preview}
+                  alt="Payment proof preview"
                   className="w-full max-h-60 object-contain"
                 />
-                <button 
+                <button
                   onClick={clearSelectedFile}
                   className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
                 >
@@ -166,7 +175,8 @@ const PaymentProofUpload = ({ orderId, onSuccess }: PaymentProofUploadProps) => 
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Selected file: {file?.name} ({Math.round(file?.size ? file.size / 1024 : 0)} KB)
+                Selected file: {file?.name} (
+                {Math.round(file?.size ? file.size / 1024 : 0)} KB)
               </p>
             </div>
           )}

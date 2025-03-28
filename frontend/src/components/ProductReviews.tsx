@@ -22,7 +22,10 @@ interface ProductReviewsProps {
   productId: string;
 }
 
-const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) => {
+const ProductReviews: React.FC<ProductReviewsProps> = ({
+  reviews,
+  productId,
+}) => {
   const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +68,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8080/api/v1/snack/review", {
+      const response = await fetch("api:8080/api/v1/snack/review", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,7 +119,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
   return (
     <div className="space-y-10 mt-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Product Reviews ({reviews.length})</h3>
+        <h3 className="text-lg font-medium">
+          Product Reviews ({reviews.length})
+        </h3>
         <select
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value)}
@@ -133,7 +138,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
         <div className="text-center py-8">
           <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-3" />
           <h4 className="text-lg font-medium text-gray-900">No Reviews Yet</h4>
-          <p className="text-gray-500 mt-1">Be the first to review this product</p>
+          <p className="text-gray-500 mt-1">
+            Be the first to review this product
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -146,7 +153,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ reviews, productId }) =
                   </div>
                   <div>
                     <div className="font-medium text-gray-900">
-                      {review.User.Username || review.User.Email || "Anonymous User"}
+                      {review.User.Username ||
+                        review.User.Email ||
+                        "Anonymous User"}
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-3 w-3 mr-1" />

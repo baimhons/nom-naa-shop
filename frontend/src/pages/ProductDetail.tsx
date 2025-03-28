@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, Star, Plus, Minus, User, Calendar } from "lucide-react";
+import {
+  ArrowLeft,
+  ShoppingCart,
+  Star,
+  Plus,
+  Minus,
+  User,
+  Calendar,
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import ProductReviews from "@/components/ProductReviews";
 
@@ -51,22 +66,27 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchSnack = async () => {
       if (!id) return;
-      
+
       setLoading(true);
       try {
-        const response = await fetch(`http://127.0.0.1:8080/api/v1/snack/${id}`);
-        
+        const response = await fetch(`api:8080/api/v1/snack/${id}`);
+
         if (!response.ok) {
           throw new Error(`Error fetching snack: ${response.status}`);
         }
-        
+
         const data = await response.json();
         setSnack(data.data);
-        
+
         // Calculate average rating
         if (data.data.Reviews && data.data.Reviews.length > 0) {
-          const total = data.data.Reviews.reduce((sum: number, review: Review) => sum + review.Rating, 0);
-          setAverageRating(parseFloat((total / data.data.Reviews.length).toFixed(1)));
+          const total = data.data.Reviews.reduce(
+            (sum: number, review: Review) => sum + review.Rating,
+            0
+          );
+          setAverageRating(
+            parseFloat((total / data.data.Reviews.length).toFixed(1))
+          );
         }
       } catch (err) {
         setError("Failed to fetch snack details. Please try again later.");
@@ -91,9 +111,9 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!snack) return;
-    
-    const token = localStorage.getItem('access_token');
-    
+
+    const token = localStorage.getItem("access_token");
+
     if (!token) {
       toast({
         title: "Authentication Required",
@@ -102,20 +122,20 @@ const ProductDetail = () => {
       });
       return;
     }
-    
+
     setAdding(true);
-    
+
     try {
-      const response = await fetch("http://127.0.0.1:8080/api/v1/cart/", {
+      const response = await fetch("api:8080/api/v1/cart/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           quantity: quantity,
-          snack_id: snack.ID
-        })
+          snack_id: snack.ID,
+        }),
       });
 
       if (!response.ok) {
@@ -128,7 +148,8 @@ const ProductDetail = () => {
         description: `${quantity} x ${snack.Name} added to your cart`,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to add item to cart";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add item to cart";
       toast({
         title: "Error",
         description: errorMessage,
@@ -141,11 +162,11 @@ const ProductDetail = () => {
 
   const getSnackImage = () => {
     if (!snack) return "";
-    return `http://127.0.0.1:8080/api/v1/snack/image/${snack.ID}`;
+    return `api:8080/api/v1/snack/image/${snack.ID}`;
   };
-  
+
   const handleViewCart = () => {
-    navigate('/cart');
+    navigate("/cart");
   };
 
   if (loading) {
@@ -172,8 +193,13 @@ const ProductDetail = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h2>
-          <p className="text-gray-500 mb-6">{error || "The product you're looking for doesn't exist or has been removed."}</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Product Not Found
+          </h2>
+          <p className="text-gray-500 mb-6">
+            {error ||
+              "The product you're looking for doesn't exist or has been removed."}
+          </p>
           <Link to="/products">
             <Button>
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -209,23 +235,27 @@ const ProductDetail = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <img 
-              src={getSnackImage()} 
-              alt={snack.Name} 
+            <img
+              src={getSnackImage()}
+              alt={snack.Name}
               className="w-full h-auto object-cover aspect-square"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = "public/lovable-uploads/93bbd02a-87dd-436e-9d2a-c053d585bed9.png";
+                (e.target as HTMLImageElement).src =
+                  "public/lovable-uploads/93bbd02a-87dd-436e-9d2a-c053d585bed9.png";
               }}
             />
           </div>
 
           <div className="space-y-6">
-            <Badge variant="outline" className="bg-primary-100 text-primary-800">
+            <Badge
+              variant="outline"
+              className="bg-primary-100 text-primary-800"
+            >
               {snack.Type}
             </Badge>
-            
+
             <h1 className="text-3xl font-bold text-gray-900">{snack.Name}</h1>
-            
+
             <div className="flex items-center space-x-4">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
@@ -233,31 +263,41 @@ const ProductDetail = () => {
                     key={i}
                     className="h-5 w-5"
                     fill={i < Math.floor(averageRating) ? "#FFC107" : "none"}
-                    stroke={i < Math.floor(averageRating) ? "#FFC107" : "#9CA3AF"}
+                    stroke={
+                      i < Math.floor(averageRating) ? "#FFC107" : "#9CA3AF"
+                    }
                   />
                 ))}
               </div>
-              <span className="text-lg font-medium text-gray-700">{averageRating.toFixed(1)}</span>
-              <span className="text-gray-500">({snack.Reviews?.length || 0} reviews)</span>
+              <span className="text-lg font-medium text-gray-700">
+                {averageRating.toFixed(1)}
+              </span>
+              <span className="text-gray-500">
+                ({snack.Reviews?.length || 0} reviews)
+              </span>
             </div>
-            
-            <div className="text-2xl font-bold text-gray-900">฿{snack.Price.toFixed(2)}</div>
-            
+
+            <div className="text-2xl font-bold text-gray-900">
+              ฿{snack.Price.toFixed(2)}
+            </div>
+
             <div className="border-t border-b border-gray-200 py-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-gray-700">Availability:</span>
                 {snack.Quantity > 0 ? (
                   <span className="text-green-600 font-medium">
-                    {snack.Quantity > 10 ? 'In Stock' : `Only ${snack.Quantity} left!`}
+                    {snack.Quantity > 10
+                      ? "In Stock"
+                      : `Only ${snack.Quantity} left!`}
                   </span>
                 ) : (
                   <span className="text-red-600 font-medium">Out of Stock</span>
                 )}
               </div>
-              
+
               <p className="text-gray-600">{snack.Description}</p>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="flex items-center border border-gray-300 rounded-md">
                 <Button
@@ -280,13 +320,15 @@ const ProductDetail = () => {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <Button
                 className="flex-1 flex items-center justify-center gap-2"
                 onClick={handleAddToCart}
                 disabled={snack.Quantity === 0 || adding}
               >
-                {snack.Quantity === 0 ? "Out of Stock" : adding ? (
+                {snack.Quantity === 0 ? (
+                  "Out of Stock"
+                ) : adding ? (
                   <>
                     <span className="animate-spin h-4 w-4 border-b-2 border-white rounded-full mr-2"></span>
                     Adding...
@@ -306,15 +348,23 @@ const ProductDetail = () => {
           <TabsList className="w-full justify-start mb-6 bg-white">
             <TabsTrigger value="description">Description</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({snack.Reviews?.length || 0})</TabsTrigger>
+            <TabsTrigger value="reviews">
+              Reviews ({snack.Reviews?.length || 0})
+            </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="description" className="bg-white p-6 rounded-lg shadow-sm">
+
+          <TabsContent
+            value="description"
+            className="bg-white p-6 rounded-lg shadow-sm"
+          >
             <h3 className="text-lg font-medium mb-4">Product Description</h3>
             <p className="text-gray-600">{snack.Description}</p>
           </TabsContent>
-          
-          <TabsContent value="details" className="bg-white p-6 rounded-lg shadow-sm">
+
+          <TabsContent
+            value="details"
+            className="bg-white p-6 rounded-lg shadow-sm"
+          >
             <h3 className="text-lg font-medium mb-4">Product Details</h3>
             <Table>
               <TableBody>
@@ -341,9 +391,15 @@ const ProductDetail = () => {
               </TableBody>
             </Table>
           </TabsContent>
-          
-          <TabsContent value="reviews" className="bg-white p-6 rounded-lg shadow-sm">
-            <ProductReviews reviews={snack.Reviews || []} productId={snack.ID} />
+
+          <TabsContent
+            value="reviews"
+            className="bg-white p-6 rounded-lg shadow-sm"
+          >
+            <ProductReviews
+              reviews={snack.Reviews || []}
+              productId={snack.ID}
+            />
           </TabsContent>
         </Tabs>
       </div>

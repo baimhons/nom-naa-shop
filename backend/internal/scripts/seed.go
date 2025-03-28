@@ -56,19 +56,19 @@ func SeedData(db *gorm.DB) {
 		return
 	}
 
-	provinceFile, err := os.Open("../internal/data/address/provinces.json")
+	provinceFile, err := os.Open("./internal/data/address/provinces.json")
 	if err != nil {
 		log.Fatalf("failed to open province file: %v", err)
 	}
 	defer provinceFile.Close()
 
-	districtFile, err := os.Open("../internal/data/address/districts.json")
+	districtFile, err := os.Open("./internal/data/address/districts.json")
 	if err != nil {
 		log.Fatalf("failed to open district file: %v", err)
 	}
 	defer districtFile.Close()
 
-	subDistrictFile, err := os.Open("../internal/data/address/sub_districts.json")
+	subDistrictFile, err := os.Open("./internal/data/address/sub_districts.json")
 	if err != nil {
 		log.Fatalf("failed to open subdistrict file: %v", err)
 	}

@@ -1,9 +1,17 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, AlertCircle, CheckCircle, User, Mail, Phone, KeyRound } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle,
+  User,
+  Mail,
+  Phone,
+  KeyRound,
+} from "lucide-react";
 
 interface FormData {
   username: string;
@@ -125,10 +133,10 @@ const RegisterForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8080/api/v1/users/register', {
-        method: 'POST',
+      const response = await fetch("api:8080/api/v1/users/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -136,7 +144,7 @@ const RegisterForm = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+        throw new Error(data.message || "Registration failed");
       }
 
       toast({
@@ -147,12 +155,15 @@ const RegisterForm = () => {
 
       // Redirect to login page or dashboard after successful registration
       setTimeout(() => {
-        navigate('/login');
+        navigate("/login");
       }, 1500);
     } catch (error) {
       toast({
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -161,10 +172,16 @@ const RegisterForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md animate-fade-up">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 w-full max-w-md animate-fade-up"
+    >
       {/* Username */}
       <div className="space-y-1">
-        <label htmlFor="username" className="form-label flex items-center gap-1.5">
+        <label
+          htmlFor="username"
+          className="form-label flex items-center gap-1.5"
+        >
           <User size={14} className="text-primary" />
           Username
         </label>
@@ -190,7 +207,10 @@ const RegisterForm = () => {
       {/* First Name & Last Name */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label htmlFor="first_name" className="form-label flex items-center gap-1.5">
+          <label
+            htmlFor="first_name"
+            className="form-label flex items-center gap-1.5"
+          >
             <User size={14} className="text-primary" />
             First Name
           </label>
@@ -214,7 +234,10 @@ const RegisterForm = () => {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="last_name" className="form-label flex items-center gap-1.5">
+          <label
+            htmlFor="last_name"
+            className="form-label flex items-center gap-1.5"
+          >
             <User size={14} className="text-primary" />
             Last Name
           </label>
@@ -265,7 +288,10 @@ const RegisterForm = () => {
 
       {/* Password */}
       <div className="space-y-1">
-        <label htmlFor="password" className="form-label flex items-center gap-1.5">
+        <label
+          htmlFor="password"
+          className="form-label flex items-center gap-1.5"
+        >
           <KeyRound size={14} className="text-primary" />
           Password
         </label>
@@ -298,7 +324,10 @@ const RegisterForm = () => {
 
       {/* Confirm Password */}
       <div className="space-y-1">
-        <label htmlFor="confirm_password" className="form-label flex items-center gap-1.5">
+        <label
+          htmlFor="confirm_password"
+          className="form-label flex items-center gap-1.5"
+        >
           <KeyRound size={14} className="text-primary" />
           Confirm Password
         </label>
@@ -331,7 +360,10 @@ const RegisterForm = () => {
 
       {/* Phone Number */}
       <div className="space-y-1">
-        <label htmlFor="phone_number" className="form-label flex items-center gap-1.5">
+        <label
+          htmlFor="phone_number"
+          className="form-label flex items-center gap-1.5"
+        >
           <Phone size={14} className="text-primary" />
           Phone Number
         </label>
@@ -355,8 +387,8 @@ const RegisterForm = () => {
       </div>
 
       {/* Submit Button */}
-      <Button 
-        type="submit" 
+      <Button
+        type="submit"
         className="w-full h-12 font-medium tracking-wide rounded-xl shadow-md hover:shadow-lg transition-all"
         disabled={isLoading}
       >
@@ -388,7 +420,10 @@ const RegisterForm = () => {
       {/* Login Link */}
       <div className="text-center text-sm">
         <span className="text-muted-foreground">Already have an account?</span>{" "}
-        <a href="/login" className="text-primary font-medium hover:underline transition-colors">
+        <a
+          href="/login"
+          className="text-primary font-medium hover:underline transition-colors"
+        >
           Sign in
         </a>
       </div>

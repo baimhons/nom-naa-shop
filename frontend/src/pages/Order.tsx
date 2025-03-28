@@ -71,7 +71,8 @@ const Orders = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("qr code");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod>("qr code");
   const [isConfirming, setIsConfirming] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ const Orders = () => {
       fetchAddresses();
       fetchUserProfile();
     } else {
-      navigate('/cart');
+      navigate("/cart");
     }
   }, [fromCart, navigate]);
 
@@ -102,7 +103,7 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/cart/", {
+      const response = await fetch("api:8080/api/v1/cart/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -140,10 +141,10 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/address/", {
+      const response = await fetch("api:8080/api/v1/address/", {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
       });
 
@@ -160,7 +161,7 @@ const Orders = () => {
       }
 
       setAddresses(data.data);
-      
+
       if (data.data.length > 0 && !selectedAddressId) {
         console.log("Setting default address:", data.data[0]);
         setSelectedAddressId(data.data[0].ID);
@@ -169,7 +170,8 @@ const Orders = () => {
       console.error("Error fetching addresses:", err);
       toast({
         title: "Error",
-        description: "Failed to load addresses. Please try again or add a new address.",
+        description:
+          "Failed to load addresses. Please try again or add a new address.",
         variant: "destructive",
       });
     }
@@ -188,10 +190,10 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/users/profile", {
+      const response = await fetch("api:8080/api/v1/users/profile", {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -253,18 +255,18 @@ const Orders = () => {
       const orderData = {
         address_id: selectedAddressId,
         cart_id: cart.ID,
-        payment_method: selectedPaymentMethod
+        payment_method: selectedPaymentMethod,
       };
 
       console.log("Sending order data:", orderData);
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/order/confirm", {
+      const response = await fetch("api:8080/api/v1/order/confirm", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(orderData),
       });
 
       if (!response.ok) {
@@ -283,7 +285,10 @@ const Orders = () => {
       console.error("Error confirming order:", error);
       toast({
         title: "Error",
-        description: typeof error === 'string' ? error : "Failed to place order. Please try again.",
+        description:
+          typeof error === "string"
+            ? error
+            : "Failed to place order. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -294,12 +299,12 @@ const Orders = () => {
   const calculateTotal = () => {
     if (!cart?.Items) return 0;
     return cart.Items.reduce((total, item) => {
-      return total + (item.Snack.Price * item.Quantity);
+      return total + item.Snack.Price * item.Quantity;
     }, 0);
   };
 
-  const getSnackImage = (snack: CartItem['Snack']) => {
-    return `http://127.0.0.1:8080/api/v1/snack/image/${snack.ID}`;
+  const getSnackImage = (snack: CartItem["Snack"]) => {
+    return `api:8080/api/v1/snack/image/${snack.ID}`;
   };
 
   if (isLoading) {
@@ -310,7 +315,9 @@ const Orders = () => {
             <h1 className="text-2xl font-semibold mb-6">Order Confirmation</h1>
             <div className="flex flex-col items-center justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              <p className="mt-4 text-gray-500">Loading your order details...</p>
+              <p className="mt-4 text-gray-500">
+                Loading your order details...
+              </p>
             </div>
           </div>
         </div>
@@ -326,7 +333,9 @@ const Orders = () => {
             <h1 className="text-2xl font-semibold mb-6">Order Confirmation</h1>
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <ShoppingBag className="h-16 w-16 text-gray-400 mb-4" />
-              <h2 className="text-xl font-medium text-gray-900 mb-2">Your cart is empty</h2>
+              <h2 className="text-xl font-medium text-gray-900 mb-2">
+                Your cart is empty
+              </h2>
               <p className="text-gray-500 mb-6 max-w-md">
                 Add some items to your cart before proceeding to checkout.
               </p>
@@ -344,8 +353,8 @@ const Orders = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="flex items-center text-gray-600 hover:text-gray-900"
             onClick={() => navigate("/cart")}
           >
@@ -357,35 +366,45 @@ const Orders = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
-              <h1 className="text-2xl font-semibold mb-6">Order Confirmation</h1>
-              
+              <h1 className="text-2xl font-semibold mb-6">
+                Order Confirmation
+              </h1>
+
               <div className="space-y-6">
                 {/* Contact Information */}
                 <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+                  <h3 className="text-lg font-medium mb-4">
+                    Contact Information
+                  </h3>
                   {userProfile ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-500">Full Name</p>
                         <p className="font-medium">
-                          {userProfile.first_name && userProfile.last_name 
+                          {userProfile.first_name && userProfile.last_name
                             ? `${userProfile.first_name} ${userProfile.last_name}`
                             : "Not provided"}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Phone Number</p>
-                        <p className="font-medium">{userProfile.phone_number || "Not provided"}</p>
+                        <p className="font-medium">
+                          {userProfile.phone_number || "Not provided"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Email</p>
-                        <p className="font-medium">{userProfile.email || "Not provided"}</p>
+                        <p className="font-medium">
+                          {userProfile.email || "Not provided"}
+                        </p>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-2"></div>
-                      <span className="text-sm text-gray-500">Loading contact information...</span>
+                      <span className="text-sm text-gray-500">
+                        Loading contact information...
+                      </span>
                     </div>
                   )}
                 </div>
@@ -395,8 +414,8 @@ const Orders = () => {
                   <h3 className="text-lg font-medium mb-4">Delivery Address</h3>
                   {addresses && addresses.length > 0 ? (
                     <div className="space-y-4">
-                      <Select 
-                        value={selectedAddressId} 
+                      <Select
+                        value={selectedAddressId}
                         onValueChange={(value) => {
                           console.log("Selected address:", value);
                           setSelectedAddressId(value);
@@ -408,7 +427,8 @@ const Orders = () => {
                         <SelectContent>
                           {addresses.map((address) => (
                             <SelectItem key={address.ID} value={address.ID}>
-                              {address.AddressDetail}, {address.SubDistrictNameTH}
+                              {address.AddressDetail},{" "}
+                              {address.SubDistrictNameTH}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -417,16 +437,40 @@ const Orders = () => {
                       {/* Show selected address details */}
                       {selectedAddressId && (
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          {addresses.find(a => a.ID === selectedAddressId) && (
+                          {addresses.find(
+                            (a) => a.ID === selectedAddressId
+                          ) && (
                             <div className="space-y-2">
                               <p className="font-medium">
-                                {addresses.find(a => a.ID === selectedAddressId)?.AddressDetail}
+                                {
+                                  addresses.find(
+                                    (a) => a.ID === selectedAddressId
+                                  )?.AddressDetail
+                                }
                               </p>
                               <p className="text-sm text-gray-600">
-                                แขวง{addresses.find(a => a.ID === selectedAddressId)?.SubDistrictNameTH}{' '}
-                                เขต{addresses.find(a => a.ID === selectedAddressId)?.DistrictNameTH}{' '}
-                                {addresses.find(a => a.ID === selectedAddressId)?.ProvinceNameTH}{' '}
-                                {addresses.find(a => a.ID === selectedAddressId)?.PostalCode}
+                                แขวง
+                                {
+                                  addresses.find(
+                                    (a) => a.ID === selectedAddressId
+                                  )?.SubDistrictNameTH
+                                }{" "}
+                                เขต
+                                {
+                                  addresses.find(
+                                    (a) => a.ID === selectedAddressId
+                                  )?.DistrictNameTH
+                                }{" "}
+                                {
+                                  addresses.find(
+                                    (a) => a.ID === selectedAddressId
+                                  )?.ProvinceNameTH
+                                }{" "}
+                                {
+                                  addresses.find(
+                                    (a) => a.ID === selectedAddressId
+                                  )?.PostalCode
+                                }
                               </p>
                             </div>
                           )}
@@ -435,8 +479,13 @@ const Orders = () => {
                     </div>
                   ) : (
                     <div className="text-center py-4">
-                      <p className="text-sm text-gray-500 mb-2">No addresses found</p>
-                      <Button variant="outline" onClick={() => navigate('/profile')}>
+                      <p className="text-sm text-gray-500 mb-2">
+                        No addresses found
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate("/profile")}
+                      >
                         Add New Address
                       </Button>
                     </div>
@@ -448,7 +497,9 @@ const Orders = () => {
                   <h3 className="text-lg font-medium mb-4">Payment Method</h3>
                   <RadioGroup
                     value={selectedPaymentMethod}
-                    onValueChange={(value) => setSelectedPaymentMethod(value as PaymentMethod)}
+                    onValueChange={(value) =>
+                      setSelectedPaymentMethod(value as PaymentMethod)
+                    }
                     className="space-y-4"
                   >
                     <div className="flex items-center space-x-3">
@@ -458,8 +509,14 @@ const Orders = () => {
                       </Label>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <RadioGroupItem value="bank transfer" id="bank-transfer" />
-                      <Label htmlFor="bank-transfer" className="flex items-center">
+                      <RadioGroupItem
+                        value="bank transfer"
+                        id="bank-transfer"
+                      />
+                      <Label
+                        htmlFor="bank-transfer"
+                        className="flex items-center"
+                      >
                         Bank Transfer
                       </Label>
                     </div>
@@ -469,26 +526,34 @@ const Orders = () => {
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                     {selectedPaymentMethod === "qr code" && (
                       <div className="text-sm text-gray-600">
-                        <p className="font-medium mb-2">QR Code Payment Instructions:</p>
+                        <p className="font-medium mb-2">
+                          QR Code Payment Instructions:
+                        </p>
                         <img
-                            src="qr_code_payment.jpg"
-                            alt="QR Code for payment"
-                            className="w-43 h-43 object-contain border p-2"
-                          />
+                          src="qr_code_payment.jpg"
+                          alt="QR Code for payment"
+                          className="w-43 h-43 object-contain border p-2"
+                        />
                       </div>
                     )}
                     {selectedPaymentMethod === "bank transfer" && (
                       <div className="text-sm text-gray-600">
-                        <p className="font-medium mb-2">Bank Transfer Details:</p>
+                        <p className="font-medium mb-2">
+                          Bank Transfer Details:
+                        </p>
                         <p>Bank: Kasikorn Bank</p>
                         <p>Account Name: Nom-Naa Shop</p>
                         <p>Account Number: 123-4-56789-0</p>
-                        <p className="mt-2">Please include your order number in the transfer reference</p>
+                        <p className="mt-2">
+                          Please include your order number in the transfer
+                          reference
+                        </p>
                       </div>
                     )}
                   </div>
                   <p className="mt-2">
-                    <span className="text-red-600 text-lg">*</span> You need to upload proof of payment in order history
+                    <span className="text-red-600 text-lg">*</span> You need to
+                    upload proof of payment in order history
                   </p>
                 </div>
 
@@ -498,24 +563,34 @@ const Orders = () => {
                     <h3 className="text-lg font-medium mb-4">Order Items</h3>
                     <div className="space-y-4">
                       {cart.Items.map((item) => (
-                        <div key={item.ID} className="flex items-center space-x-4 py-4 border-b last:border-0">
+                        <div
+                          key={item.ID}
+                          className="flex items-center space-x-4 py-4 border-b last:border-0"
+                        >
                           <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden">
                             <img
                               src={getSnackImage(item.Snack)}
                               alt={item.Snack.Name}
                               className="w-full h-full object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/placeholder.png";
+                                (e.target as HTMLImageElement).src =
+                                  "/placeholder.png";
                               }}
                             />
                           </div>
                           <div className="flex-1">
                             <h4 className="font-medium">{item.Snack.Name}</h4>
-                            <p className="text-sm text-gray-500">Quantity: {item.Quantity}</p>
+                            <p className="text-sm text-gray-500">
+                              Quantity: {item.Quantity}
+                            </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium">฿{(item.Snack.Price * item.Quantity).toFixed(2)}</p>
-                            <p className="text-sm text-gray-500">฿{item.Snack.Price.toFixed(2)} each</p>
+                            <p className="font-medium">
+                              ฿{(item.Snack.Price * item.Quantity).toFixed(2)}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              ฿{item.Snack.Price.toFixed(2)} each
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -530,7 +605,7 @@ const Orders = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-6 sticky top-4">
               <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-              
+
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
@@ -549,7 +624,9 @@ const Orders = () => {
               <Button
                 className="w-full mt-6"
                 onClick={confirmOrder}
-                disabled={isConfirming || !selectedAddressId || !selectedPaymentMethod}
+                disabled={
+                  isConfirming || !selectedAddressId || !selectedPaymentMethod
+                }
               >
                 {isConfirming ? (
                   <div className="flex items-center justify-center">

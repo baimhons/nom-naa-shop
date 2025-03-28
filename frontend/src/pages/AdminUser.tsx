@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { Search, UserX, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +34,9 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const profileSchema = z.object({
-  username: z.string().min(3, { message: "Username must be at least 3 characters." }),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   phone_number: z.string().optional(),
   first_name: z.string().optional(),
@@ -37,7 +53,6 @@ interface User {
   created_at: string;
   updated_at: string;
 }
-
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
@@ -81,7 +96,7 @@ const AdminUsers = () => {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8080/api/v1/users/all?${queryParams.toString()}`,
+        `api:8080/api/v1/users/all?${queryParams.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -94,9 +109,16 @@ const AdminUsers = () => {
       }
 
       const responseData = await response.json();
-      if (responseData && responseData.data && Array.isArray(responseData.data.data)) {
+      if (
+        responseData &&
+        responseData.data &&
+        Array.isArray(responseData.data.data)
+      ) {
         setUsers(responseData.data.data);
-        setTotalPages(responseData.data.total_pages || Math.ceil(responseData.data.total / PAGE_SIZE));
+        setTotalPages(
+          responseData.data.total_pages ||
+            Math.ceil(responseData.data.total / PAGE_SIZE)
+        );
         setTotalUsers(responseData.data.total || responseData.data.data.length);
       } else {
         throw new Error("Unexpected response structure");
@@ -125,23 +147,20 @@ const AdminUsers = () => {
         return;
       }
 
-      const response = await fetch(
-        `http://127.0.0.1:8080/api/v1/users/profile`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            username: data.username,
-            email: data.email,
-            phone_number: data.phone_number,
-            first_name: data.first_name,
-            last_name: data.last_name,
-          }),
-        }
-      );
+      const response = await fetch(`api:8080/api/v1/users/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          username: data.username,
+          email: data.email,
+          phone_number: data.phone_number,
+          first_name: data.first_name,
+          last_name: data.last_name,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -162,7 +181,10 @@ const AdminUsers = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update user profile",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update user profile",
         variant: "destructive",
       });
     }
@@ -173,7 +195,6 @@ const AdminUsers = () => {
     setUpdateDialogOpen(true);
   };
 
-  
   useEffect(() => {
     fetchUsers();
   }, [currentPage, searchTerm]);
@@ -189,7 +210,9 @@ const AdminUsers = () => {
             onClick={fetchUsers}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </CardHeader>
@@ -225,7 +248,9 @@ const AdminUsers = () => {
                 ) : (
                   users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.username}</TableCell>
+                      <TableCell className="font-medium">
+                        {user.username}
+                      </TableCell>
                       <TableCell>{user.first_name}</TableCell>
                       <TableCell>{user.last_name}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -262,14 +287,21 @@ const AdminUsers = () => {
                     <Input {...form.register("username")} id="username" />
                   </div>
                   <div>
-                    <label htmlFor="email">Email <span className="text-red-600"> * </span>
-                    <span className="text-gray-400">user cannot update email, please use current user email to find user to update.</span>
+                    <label htmlFor="email">
+                      Email <span className="text-red-600"> * </span>
+                      <span className="text-gray-400">
+                        user cannot update email, please use current user email
+                        to find user to update.
+                      </span>
                     </label>
                     <Input {...form.register("email")} id="email" />
                   </div>
                   <div>
                     <label htmlFor="phone_number">Phone Number</label>
-                    <Input {...form.register("phone_number")} id="phone_number" />
+                    <Input
+                      {...form.register("phone_number")}
+                      id="phone_number"
+                    />
                   </div>
                   <div>
                     <label htmlFor="first_name">First Name</label>
@@ -281,7 +313,9 @@ const AdminUsers = () => {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="w-full mt-4">Update</Button>
+                  <Button type="submit" className="w-full mt-4">
+                    Update
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>

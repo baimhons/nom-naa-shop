@@ -37,7 +37,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, Eye, RefreshCw, Clock, CheckCircle, TruckIcon, XCircle, Loader2 } from "lucide-react";
+import {
+  Search,
+  Package,
+  Eye,
+  RefreshCw,
+  Clock,
+  CheckCircle,
+  TruckIcon,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import { format } from "date-fns";
 
 interface OrderItem {
@@ -96,7 +106,7 @@ interface PaginationParams {
   page: number;
   limit: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }
 
 // Add response interface with pagination metadata
@@ -111,39 +121,41 @@ interface PaginatedResponse<T> {
 }
 
 // API functions
-const fetchOrders = async (params: PaginationParams): Promise<PaginatedResponse<Order>> => {
+const fetchOrders = async (
+  params: PaginationParams
+): Promise<PaginatedResponse<Order>> => {
   const token = localStorage.getItem("access_token");
   const queryParams = new URLSearchParams();
-  
+
   // Fix the page parameter - backend expects 0-based index
-  queryParams.append('page', (params.page - 1).toString()); // Convert from 1-based UI to 0-based API
-  queryParams.append('page_size', params.limit.toString());
-  
+  queryParams.append("page", (params.page - 1).toString()); // Convert from 1-based UI to 0-based API
+  queryParams.append("page_size", params.limit.toString());
+
   // Add sorting parameters if provided
   if (params.sort) {
-    queryParams.append('sort', params.sort);
+    queryParams.append("sort", params.sort);
   }
-  
+
   if (params.order) {
-    queryParams.append('order', params.order);
+    queryParams.append("order", params.order);
   }
-  
-  const url = `http://127.0.0.1:8080/api/v1/order?${queryParams}`;
-  
+
+  const url = `api:8080/api/v1/order?${queryParams}`;
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     console.error("API Error:", errorText);
     throw new Error(`Failed to fetch orders: ${response.status} ${errorText}`);
   }
-  
+
   const data = await response.json();
-  
+
   return {
     data: data.data || [],
     pagination: data.pagination || {
@@ -155,9 +167,15 @@ const fetchOrders = async (params: PaginationParams): Promise<PaginatedResponse<
   };
 };
 
-const updateOrderStatus = async ({ orderId, status }: { orderId: string; status: string }) => {
-const token = localStorage.getItem("access_token");
-  const response = await fetch("http://127.0.0.1:8080/api/v1/order/status", {
+const updateOrderStatus = async ({
+  orderId,
+  status,
+}: {
+  orderId: string;
+  status: string;
+}) => {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch("api:8080/api/v1/order/status", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -168,17 +186,25 @@ const token = localStorage.getItem("access_token");
       status: status,
     }),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to update order status");
   }
-  
+
   return response.json();
 };
 
 // Add the AuthorizedImage component from OrderHistory
-const AuthorizedImage = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
-  const [imageSrc, setImageSrc] = useState<string>('');
+const AuthorizedImage = ({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) => {
+  const [imageSrc, setImageSrc] = useState<string>("");
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -189,17 +215,17 @@ const AuthorizedImage = ({ src, alt, className }: { src: string; alt: string; cl
 
         const response = await fetch(src, {
           headers: {
-            "Authorization": `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
 
-        if (!response.ok) throw new Error('Failed to load image');
+        if (!response.ok) throw new Error("Failed to load image");
 
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
         setImageSrc(objectUrl);
       } catch (err) {
-        console.error('Error loading image:', err);
+        console.error("Error loading image:", err);
         setError(true);
       }
     };
@@ -224,7 +250,9 @@ const AuthorizedImage = ({ src, alt, className }: { src: string; alt: string; cl
   return imageSrc ? (
     <img src={imageSrc} alt={alt} className={className} />
   ) : (
-    <div className={`${className} flex items-center justify-center bg-gray-100`}>
+    <div
+      className={`${className} flex items-center justify-center bg-gray-100`}
+    >
       <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
     </div>
   );
@@ -236,19 +264,19 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [viewOrderDetails, setViewOrderDetails] = useState<Order | null>(null);
-  
+
   // Add pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // Add sorting states
   const [sortField, setSortField] = useState<string>("create_at");
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // Default to newest first
-  
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc"); // Default to newest first
+
   const queryClient = useQueryClient();
-  
+
   // Update the query with retry and error handling
   const { data, isLoading, error } = useQuery({
     queryKey: ["orders", currentPage, pageSize, sortField, sortOrder],
@@ -260,11 +288,11 @@ const AdminOrders = () => {
           sort: sortField,
           order: sortOrder,
         });
-        
+
         // Update pagination state
         setTotalOrders(result.pagination.total);
         setTotalPages(result.pagination.totalPages);
-        
+
         return result.data;
       } catch (err) {
         console.error("Error fetching orders:", err);
@@ -274,9 +302,9 @@ const AdminOrders = () => {
     retry: 1,
     refetchOnWindowFocus: false,
   });
-  
+
   const orders = data || [];
-  
+
   const updateStatusMutation = useMutation({
     mutationFn: updateOrderStatus,
     onSuccess: () => {
@@ -290,42 +318,62 @@ const AdminOrders = () => {
       toast.error(`Failed to update order status: ${error.message}`);
     },
   });
-  
+
   const handleUpdateStatus = () => {
     if (!selectedOrder || !selectedStatus) {
       toast.error("Please select a valid status");
       return;
     }
-    
+
     updateStatusMutation.mutate({
       orderId: selectedOrder.ID,
       status: selectedStatus,
     });
   };
-  
+
   const openUpdateDialog = (order: Order) => {
     setSelectedOrder(order);
     setSelectedStatus(order.Status);
     setIsUpdateDialogOpen(true);
   };
-  
+
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
-      case 'processing':
-        return <Badge className="bg-blue-500 hover:bg-blue-600"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Processing</Badge>;
-      case 'shipped':
-        return <Badge className="bg-purple-500 hover:bg-purple-600"><TruckIcon className="h-3 w-3 mr-1" /> Shipped</Badge>;
-      case 'delivered':
-        return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="h-3 w-3 mr-1" /> Delivered</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500 hover:bg-red-600"><XCircle className="h-3 w-3 mr-1" /> Cancelled</Badge>;
+      case "pending":
+        return (
+          <Badge className="bg-yellow-500 hover:bg-yellow-600">
+            <Clock className="h-3 w-3 mr-1" /> Pending
+          </Badge>
+        );
+      case "processing":
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600">
+            <Loader2 className="h-3 w-3 mr-1 animate-spin" /> Processing
+          </Badge>
+        );
+      case "shipped":
+        return (
+          <Badge className="bg-purple-500 hover:bg-purple-600">
+            <TruckIcon className="h-3 w-3 mr-1" /> Shipped
+          </Badge>
+        );
+      case "delivered":
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">
+            <CheckCircle className="h-3 w-3 mr-1" /> Delivered
+          </Badge>
+        );
+      case "cancelled":
+        return (
+          <Badge className="bg-red-500 hover:bg-red-600">
+            <XCircle className="h-3 w-3 mr-1" /> Cancelled
+          </Badge>
+        );
       default:
         return <Badge>{status}</Badge>;
     }
   };
-  
+
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), "PPpp");
@@ -333,11 +381,17 @@ const AdminOrders = () => {
       return dateString;
     }
   };
-  
+
   const filteredOrders = orders.filter((order: Order) => {
-    const orderIdMatch = order.ID.toLowerCase().includes(searchTerm.toLowerCase());
-    const userNameMatch = order.Cart?.User?.Username?.toLowerCase().includes(searchTerm.toLowerCase());
-    const userEmailMatch = order.Cart?.User?.Email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const orderIdMatch = order.ID.toLowerCase().includes(
+      searchTerm.toLowerCase()
+    );
+    const userNameMatch = order.Cart?.User?.Username?.toLowerCase().includes(
+      searchTerm.toLowerCase()
+    );
+    const userEmailMatch = order.Cart?.User?.Email?.toLowerCase().includes(
+      searchTerm.toLowerCase()
+    );
     return orderIdMatch || userNameMatch || userEmailMatch;
   });
 
@@ -345,29 +399,31 @@ const AdminOrders = () => {
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
-  
+
   // Function to handle sort changes
   const handleSort = (field: string) => {
     if (field === sortField) {
       // Toggle sort order if clicking on the same field
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       // Set new field and default order (desc for dates, asc for others)
       setSortField(field);
-      setSortOrder(field === 'CreateAt' ? 'desc' : 'asc');
+      setSortOrder(field === "CreateAt" ? "desc" : "asc");
     }
-    
+
     // Reset to first page when sorting changes
     setCurrentPage(1);
   };
-  
+
   // Helper to show sort indicators
   const getSortIndicator = (field: string) => {
     if (field !== sortField) return null;
-    
-    return sortOrder === 'asc' 
-      ? <span className="ml-1">↑</span> 
-      : <span className="ml-1">↓</span>;
+
+    return sortOrder === "asc" ? (
+      <span className="ml-1">↑</span>
+    ) : (
+      <span className="ml-1">↓</span>
+    );
   };
 
   return (
@@ -384,8 +440,8 @@ const AdminOrders = () => {
           />
         </div>
         <div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               queryClient.invalidateQueries({ queryKey: ["orders"] });
             }}
@@ -394,7 +450,7 @@ const AdminOrders = () => {
           </Button>
         </div>
       </div>
-      
+
       {/* Display loading and error states more clearly */}
       {isLoading ? (
         <div className="text-center py-10">
@@ -407,10 +463,12 @@ const AdminOrders = () => {
           <pre className="mt-2 p-2 bg-red-50 rounded text-sm overflow-auto">
             {(error as Error).message}
           </pre>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="mt-4"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["orders"] })}
+            onClick={() =>
+              queryClient.invalidateQueries({ queryKey: ["orders"] })
+            }
           >
             Try Again
           </Button>
@@ -420,30 +478,30 @@ const AdminOrders = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead 
-                  className="cursor-pointer" 
-                  onClick={() => handleSort('ID')}
+                <TableHead
+                  className="cursor-pointer"
+                  onClick={() => handleSort("ID")}
                 >
-                  Order ID {getSortIndicator('ID')}
+                  Order ID {getSortIndicator("ID")}
                 </TableHead>
-                <TableHead 
-                  className="cursor-pointer" 
-                  onClick={() => handleSort('CreateAt')}
+                <TableHead
+                  className="cursor-pointer"
+                  onClick={() => handleSort("CreateAt")}
                 >
-                  Date {getSortIndicator('CreateAt')}
+                  Date {getSortIndicator("CreateAt")}
                 </TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead 
-                  className="cursor-pointer" 
-                  onClick={() => handleSort('TotalPrice')}
+                <TableHead
+                  className="cursor-pointer"
+                  onClick={() => handleSort("TotalPrice")}
                 >
-                  Amount {getSortIndicator('TotalPrice')}
+                  Amount {getSortIndicator("TotalPrice")}
                 </TableHead>
-                <TableHead 
-                  className="cursor-pointer" 
-                  onClick={() => handleSort('Status')}
+                <TableHead
+                  className="cursor-pointer"
+                  onClick={() => handleSort("Status")}
                 >
-                  Status {getSortIndicator('Status')}
+                  Status {getSortIndicator("Status")}
                 </TableHead>
                 <TableHead>Payment</TableHead>
                 <TableHead>Actions</TableHead>
@@ -459,12 +517,18 @@ const AdminOrders = () => {
               ) : (
                 filteredOrders.map((order: Order) => (
                   <TableRow key={order.ID}>
-                    <TableCell className="font-medium">{order.ID.substring(0, 8)}...</TableCell>
+                    <TableCell className="font-medium">
+                      {order.ID.substring(0, 8)}...
+                    </TableCell>
                     <TableCell>{formatDate(order.CreateAt)}</TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{order.Cart?.User?.Username || 'N/A'}</p>
-                        <p className="text-sm text-gray-500">{order.Cart?.User?.Email || 'N/A'}</p>
+                        <p className="font-medium">
+                          {order.Cart?.User?.Username || "N/A"}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {order.Cart?.User?.Email || "N/A"}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell>฿{order.TotalPrice.toFixed(2)}</TableCell>
@@ -472,11 +536,13 @@ const AdminOrders = () => {
                     <TableCell>
                       {order.Payment ? (
                         <Badge variant="outline" className="bg-green-50">
-                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" /> Paid
+                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />{" "}
+                          Paid
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-yellow-50">
-                          <Clock className="h-3 w-3 mr-1 text-yellow-500" /> Pending
+                          <Clock className="h-3 w-3 mr-1 text-yellow-500" />{" "}
+                          Pending
                         </Badge>
                       )}
                     </TableCell>
@@ -505,11 +571,10 @@ const AdminOrders = () => {
           </Table>
         </div>
       )}
-      
+
       {/* Add pagination controls */}
       <div className="flex items-center justify-between mt-4">
-        <div className="">
-        </div>
+        <div className=""></div>
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
@@ -519,54 +584,65 @@ const AdminOrders = () => {
           >
             Previous
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
-            
           >
             Next
           </Button>
         </div>
       </div>
-      
+
       {/* Order Details Dialog */}
-      <Dialog open={!!viewOrderDetails} onOpenChange={(open) => !open && setViewOrderDetails(null)}>
+      <Dialog
+        open={!!viewOrderDetails}
+        onOpenChange={(open) => !open && setViewOrderDetails(null)}
+      >
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           {viewOrderDetails && (
             <>
               <DialogHeader>
                 <DialogTitle>Order Details</DialogTitle>
                 <DialogDescription>
-                  Order #{viewOrderDetails.ID} - {formatDate(viewOrderDetails.CreateAt)}
+                  Order #{viewOrderDetails.ID} -{" "}
+                  {formatDate(viewOrderDetails.CreateAt)}
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                 <div>
                   <h4 className="font-medium mb-2">Customer Information</h4>
-                  <p>Name: {
-                    (viewOrderDetails.Cart?.User?.FirstName && viewOrderDetails.Cart?.User?.LastName ? 
-                      `${viewOrderDetails.Cart.User.FirstName} ${viewOrderDetails.Cart.User.LastName}` : 
-                      'N/A')
-                  }</p>
-                  <p>Email: {viewOrderDetails.Cart?.User?.Email || 'N/A'}</p>
-                  <p>Phone: {viewOrderDetails.Cart?.User?.PhoneNumber || 'N/A'}</p>
+                  <p>
+                    Name:{" "}
+                    {viewOrderDetails.Cart?.User?.FirstName &&
+                    viewOrderDetails.Cart?.User?.LastName
+                      ? `${viewOrderDetails.Cart.User.FirstName} ${viewOrderDetails.Cart.User.LastName}`
+                      : "N/A"}
+                  </p>
+                  <p>Email: {viewOrderDetails.Cart?.User?.Email || "N/A"}</p>
+                  <p>
+                    Phone: {viewOrderDetails.Cart?.User?.PhoneNumber || "N/A"}
+                  </p>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">Shipping Address</h4>
                   <p>
-                    {viewOrderDetails.Address?.AddressDetail || 'N/A'}
-                    {viewOrderDetails.Address?.SubDistrictNameTH && `, ${viewOrderDetails.Address.SubDistrictNameTH}`}
-                    {viewOrderDetails.Address?.DistrictNameTH && `, ${viewOrderDetails.Address.DistrictNameTH}`}
-                    {viewOrderDetails.Address?.ProvinceNameTH && `, ${viewOrderDetails.Address.ProvinceNameTH}`}
-                    {viewOrderDetails.Address?.PostalCode && `, ${viewOrderDetails.Address.PostalCode}`}
+                    {viewOrderDetails.Address?.AddressDetail || "N/A"}
+                    {viewOrderDetails.Address?.SubDistrictNameTH &&
+                      `, ${viewOrderDetails.Address.SubDistrictNameTH}`}
+                    {viewOrderDetails.Address?.DistrictNameTH &&
+                      `, ${viewOrderDetails.Address.DistrictNameTH}`}
+                    {viewOrderDetails.Address?.ProvinceNameTH &&
+                      `, ${viewOrderDetails.Address.ProvinceNameTH}`}
+                    {viewOrderDetails.Address?.PostalCode &&
+                      `, ${viewOrderDetails.Address.PostalCode}`}
                   </p>
                 </div>
               </div>
-              
+
               <div className="py-2">
                 <h4 className="font-medium mb-2">Order Items</h4>
                 <div className="border rounded-md overflow-hidden">
@@ -586,7 +662,7 @@ const AdminOrders = () => {
                             <div className="flex items-center gap-2">
                               {item.Snack.Image ? (
                                 <img
-                                  src={`http://127.0.0.1:8080/api/v1/snack/image/${item.Snack.ID}`}
+                                  src={`api:8080/api/v1/snack/image/${item.Snack.ID}`}
                                   alt={item.Snack.Name}
                                   className="w-10 h-10 object-cover rounded"
                                 />
@@ -596,11 +672,16 @@ const AdminOrders = () => {
                           </TableCell>
                           <TableCell>{item.Quantity}</TableCell>
                           <TableCell>฿{item.Snack.Price.toFixed(2)}</TableCell>
-                          <TableCell>฿{(item.Quantity * item.Snack.Price).toFixed(2)}</TableCell>
+                          <TableCell>
+                            ฿{(item.Quantity * item.Snack.Price).toFixed(2)}
+                          </TableCell>
                         </TableRow>
                       ))}
                       <TableRow>
-                        <TableCell colSpan={3} className="text-right font-medium">
+                        <TableCell
+                          colSpan={3}
+                          className="text-right font-medium"
+                        >
                           Total:
                         </TableCell>
                         <TableCell className="font-bold">
@@ -611,13 +692,13 @@ const AdminOrders = () => {
                   </Table>
                 </div>
               </div>
-              
+
               <div className="py-2">
                 <h4 className="font-medium mb-2">Payment Proof</h4>
                 <div className="border rounded p-4 flex justify-center">
                   {viewOrderDetails.Payment && viewOrderDetails.Payment.ID ? (
                     <AuthorizedImage
-                      src={`http://127.0.0.1:8080/api/v1/payment/proof/${viewOrderDetails.Payment.ID}`}
+                      src={`api:8080/api/v1/payment/proof/${viewOrderDetails.Payment.ID}`}
                       alt="Payment proof"
                       className="max-h-60 object-contain"
                     />
@@ -634,15 +715,20 @@ const AdminOrders = () => {
                   </p>
                 )}
               </div>
-              
+
               <DialogFooter>
-                <Button variant="outline" onClick={() => setViewOrderDetails(null)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setViewOrderDetails(null)}
+                >
                   Close
                 </Button>
-                <Button onClick={() => {
-                  setViewOrderDetails(null);
-                  openUpdateDialog(viewOrderDetails);
-                }}>
+                <Button
+                  onClick={() => {
+                    setViewOrderDetails(null);
+                    openUpdateDialog(viewOrderDetails);
+                  }}
+                >
                   Update Status
                 </Button>
               </DialogFooter>
@@ -650,17 +736,18 @@ const AdminOrders = () => {
           )}
         </DialogContent>
       </Dialog>
-      
+
       {/* Update Status Dialog */}
       <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Update Order Status</DialogTitle>
             <DialogDescription>
-              Change the status for order #{selectedOrder?.ID.substring(0, 8)}...
+              Change the status for order #{selectedOrder?.ID.substring(0, 8)}
+              ...
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4">
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger>
@@ -675,7 +762,7 @@ const AdminOrders = () => {
               </SelectContent>
             </Select>
           </div>
-          
+
           <DialogFooter>
             <Button
               variant="outline"

@@ -39,23 +39,21 @@ const Admin = () => {
         const token = localStorage.getItem("access_token");
         if (!token) return;
 
-        const response = await fetch("http://127.0.0.1:8080/api/v1/order/total-revenue",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch("api:8080/api/v1/order/total-revenue", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const data = await response.json();
-        
+
         if (data && data.totalRevenue) {
-          setTotalRevenue(data.totalRevenue);  
+          setTotalRevenue(data.totalRevenue);
         }
       } catch (error) {
         console.error("Error fetching total revenue:", error);
       }
     };
-  
+
     fetchTotalRevenue();
   }, []);
 
@@ -66,7 +64,9 @@ const Admin = () => {
           <Link key={index} to={card.link}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-xl font-bold">{card.title}</CardTitle>
+                <CardTitle className="text-xl font-bold">
+                  {card.title}
+                </CardTitle>
                 <div className={`p-2 rounded-full ${card.bgColor}`}>
                   <card.icon className={`h-6 w-6 ${card.iconColor}`} />
                 </div>
@@ -90,7 +90,9 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {totalRevenue !== null ? `฿${totalRevenue.toFixed(2)}` : "Loading..."}
+                {totalRevenue !== null
+                  ? `฿${totalRevenue.toFixed(2)}`
+                  : "Loading..."}
               </div>
             </CardContent>
           </Card>

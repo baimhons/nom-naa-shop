@@ -1,12 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { MapPin, Plus, X, Pencil, Trash2 } from "lucide-react";
 
 interface Province {
@@ -76,7 +103,10 @@ const AddressManager = () => {
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
-  const [deleteDialog, setDeleteDialog] = useState<{open: boolean, addressId: string | null}>({open: false, addressId: null});
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    addressId: string | null;
+  }>({ open: false, addressId: null });
 
   const form = useForm<AddressFormData>({
     defaultValues: {
@@ -114,10 +144,10 @@ const AddressManager = () => {
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/address", {
+      const response = await fetch("api:8080/api/v1/address", {
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -146,7 +176,7 @@ const AddressManager = () => {
 
   const fetchProvinces = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8080/api/v1/address/provinces");
+      const response = await fetch("api:8080/api/v1/address/provinces");
       if (!response.ok) {
         throw new Error("Failed to fetch provinces");
       }
@@ -164,7 +194,9 @@ const AddressManager = () => {
 
   const fetchDistricts = async (provinceCode: string) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8080/api/v1/address/province/${provinceCode}/districts`);
+      const response = await fetch(
+        `api:8080/api/v1/address/province/${provinceCode}/districts`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch districts");
       }
@@ -183,7 +215,9 @@ const AddressManager = () => {
 
   const fetchSubDistricts = async (districtCode: string) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8080/api/v1/address/district/${districtCode}/sub_districts`);
+      const response = await fetch(
+        `api:8080/api/v1/address/district/${districtCode}/sub_districts`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch sub-districts");
       }
@@ -234,39 +268,47 @@ const AddressManager = () => {
         province_code: parseInt(data.province_code),
         district_code: parseInt(data.district_code),
         sub_district_code: parseInt(data.sub_district_code),
-        address_detail: data.address_detail
+        address_detail: data.address_detail,
       };
 
-      let url = "http://127.0.0.1:8080/api/v1/address";
+      let url = "api:8080/api/v1/address";
       let method = "POST";
 
       // If editing, include the ID and use PUT method
       if (editingAddress) {
-        url = `http://127.0.0.1:8080/api/v1/address/${editingAddress}`;
+        url = `api:8080/api/v1/address/${editingAddress}`;
         method = "PUT";
         // Add id to payload for update
         Object.assign(payload, { id: editingAddress });
       }
 
-      console.log(`${method === "POST" ? "Submitting" : "Updating"} address payload:`, payload);
+      console.log(
+        `${method === "POST" ? "Submitting" : "Updating"} address payload:`,
+        payload
+      );
 
       const response = await fetch(url, {
         method,
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to ${editingAddress ? "update" : "add"} address`);
+        throw new Error(
+          errorData.message ||
+            `Failed to ${editingAddress ? "update" : "add"} address`
+        );
       }
 
       toast({
         title: "Success",
-        description: `Address ${editingAddress ? "updated" : "added"} successfully`,
+        description: `Address ${
+          editingAddress ? "updated" : "added"
+        } successfully`,
       });
 
       // Refresh user addresses
@@ -275,10 +317,16 @@ const AddressManager = () => {
       setEditingAddress(null);
       form.reset();
     } catch (error) {
-      console.error(`Error ${editingAddress ? "updating" : "adding"} address:`, error);
+      console.error(
+        `Error ${editingAddress ? "updating" : "adding"} address:`,
+        error
+      );
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : `Failed to ${editingAddress ? "update" : "add"} address`,
+        description:
+          error instanceof Error
+            ? error.message
+            : `Failed to ${editingAddress ? "update" : "add"} address`,
         variant: "destructive",
       });
     } finally {
@@ -289,15 +337,21 @@ const AddressManager = () => {
   const handleEdit = (address: Address) => {
     // Get the ID from either format
     const addressId = address.ID || "";
-    
+
     // Get the codes from either format
-    const provinceCode = String(address.ProvinceCode || address.province_code || "");
-    const districtCode = String(address.DistrictCode || address.district_code || "");
-    const subDistrictCode = String(address.SubDistrictCode || address.sub_district_code || "");
+    const provinceCode = String(
+      address.ProvinceCode || address.province_code || ""
+    );
+    const districtCode = String(
+      address.DistrictCode || address.district_code || ""
+    );
+    const subDistrictCode = String(
+      address.SubDistrictCode || address.sub_district_code || ""
+    );
     const addressDetail = address.AddressDetail || address.address_detail || "";
 
     setEditingAddress(addressId);
-    
+
     // First fetch the required data for the dropdowns
     fetchDistricts(provinceCode)
       .then(() => fetchSubDistricts(districtCode))
@@ -307,12 +361,12 @@ const AddressManager = () => {
         form.setValue("district_code", districtCode);
         form.setValue("sub_district_code", subDistrictCode);
         form.setValue("address_detail", addressDetail);
-        
+
         // Update selected values for conditional rendering
         setSelectedProvince(provinceCode);
         setSelectedDistrict(districtCode);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error setting up edit form:", error);
         toast({
           title: "Error",
@@ -325,13 +379,13 @@ const AddressManager = () => {
   const handleDeleteConfirmation = (addressId: string) => {
     setDeleteDialog({
       open: true,
-      addressId
+      addressId,
     });
   };
 
   const handleDelete = async () => {
     if (!deleteDialog.addressId) return;
-    
+
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -339,12 +393,15 @@ const AddressManager = () => {
         return;
       }
 
-      const response = await fetch(`http://127.0.0.1:8080/api/v1/address/${deleteDialog.addressId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
+      const response = await fetch(
+        `api:8080/api/v1/address/${deleteDialog.addressId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete address");
@@ -362,7 +419,8 @@ const AddressManager = () => {
       console.error("Error deleting address:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete address",
+        description:
+          error instanceof Error ? error.message : "Failed to delete address",
         variant: "destructive",
       });
     } finally {
@@ -372,27 +430,48 @@ const AddressManager = () => {
 
   const getDisplayAddress = (address: Address) => {
     // First check the new format from API
-    if (address.ProvinceNameTH && address.DistrictNameTH && address.SubDistrictNameTH) {
+    if (
+      address.ProvinceNameTH &&
+      address.DistrictNameTH &&
+      address.SubDistrictNameTH
+    ) {
       return {
         province: address.ProvinceNameTH,
         district: address.DistrictNameTH,
         subDistrict: address.SubDistrictNameTH,
         postalCode: address.PostalCode,
-        addressDetail: address.AddressDetail || address.address_detail
+        addressDetail: address.AddressDetail || address.address_detail,
       };
     }
-    
+
     // Fall back to the old format and lookups
-    const province = provinces.find(p => p.province_code === (address.ProvinceCode || address.province_code));
-    const district = districts.find(d => d.district_code === (address.DistrictCode || address.district_code));
-    const subDistrict = subDistricts.find(s => s.sub_district_code === (address.SubDistrictCode || address.sub_district_code));
-    
+    const province = provinces.find(
+      (p) => p.province_code === (address.ProvinceCode || address.province_code)
+    );
+    const district = districts.find(
+      (d) => d.district_code === (address.DistrictCode || address.district_code)
+    );
+    const subDistrict = subDistricts.find(
+      (s) =>
+        s.sub_district_code ===
+        (address.SubDistrictCode || address.sub_district_code)
+    );
+
     return {
-      province: province?.province_name_th || address.province_name || "Unknown",
-      district: district?.district_name_th || address.district_name || "Unknown",
-      subDistrict: subDistrict?.sub_district_name_th || address.sub_district_name || "Unknown",
-      postalCode: subDistrict?.postal_code || address.PostalCode || address.postal_code || "N/A",
-      addressDetail: address.AddressDetail || address.address_detail || ""
+      province:
+        province?.province_name_th || address.province_name || "Unknown",
+      district:
+        district?.district_name_th || address.district_name || "Unknown",
+      subDistrict:
+        subDistrict?.sub_district_name_th ||
+        address.sub_district_name ||
+        "Unknown",
+      postalCode:
+        subDistrict?.postal_code ||
+        address.PostalCode ||
+        address.postal_code ||
+        "N/A",
+      addressDetail: address.AddressDetail || address.address_detail || "",
     };
   };
 
@@ -414,7 +493,7 @@ const AddressManager = () => {
             )}
           </CardTitle>
           <CardDescription>
-            {editingAddress 
+            {editingAddress
               ? "Update your address information"
               : "You can add up to 3 addresses"}
           </CardDescription>
@@ -441,8 +520,12 @@ const AddressManager = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {provinces.map((province) => (
-                            <SelectItem key={province.id} value={String(province.province_code)}>
-                              {province.province_name_th} ({province.province_name_en})
+                            <SelectItem
+                              key={province.id}
+                              value={String(province.province_code)}
+                            >
+                              {province.province_name_th} (
+                              {province.province_name_en})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -473,8 +556,12 @@ const AddressManager = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {districts.map((district) => (
-                            <SelectItem key={district.id} value={String(district.district_code)}>
-                              {district.district_name_th} ({district.district_name_en})
+                            <SelectItem
+                              key={district.id}
+                              value={String(district.district_code)}
+                            >
+                              {district.district_name_th} (
+                              {district.district_name_en})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -502,8 +589,13 @@ const AddressManager = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {subDistricts.map((subDistrict) => (
-                            <SelectItem key={subDistrict.id} value={String(subDistrict.sub_district_code)}>
-                              {subDistrict.sub_district_name_th} ({subDistrict.sub_district_name_en}) - {subDistrict.postal_code}
+                            <SelectItem
+                              key={subDistrict.id}
+                              value={String(subDistrict.sub_district_code)}
+                            >
+                              {subDistrict.sub_district_name_th} (
+                              {subDistrict.sub_district_name_en}) -{" "}
+                              {subDistrict.postal_code}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -544,7 +636,11 @@ const AddressManager = () => {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : editingAddress ? "Update Address" : "Save Address"}
+                  {loading
+                    ? "Saving..."
+                    : editingAddress
+                    ? "Update Address"
+                    : "Save Address"}
                 </Button>
               </div>
             </form>
@@ -573,7 +669,9 @@ const AddressManager = () => {
       {userAddresses.length === 0 && !addingAddress && !editingAddress ? (
         <Card className="bg-muted/50">
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No addresses found. Add your first address.</p>
+            <p className="text-muted-foreground">
+              No addresses found. Add your first address.
+            </p>
             <Button onClick={() => setAddingAddress(true)} className="mt-4">
               <Plus className="mr-2 h-4 w-4" /> Add Address
             </Button>
@@ -584,17 +682,19 @@ const AddressManager = () => {
           {userAddresses.map((address, index) => {
             const displayAddress = getDisplayAddress(address);
             const addressId = address.ID || "";
-            
+
             return (
               <Card key={addressId || index} className="overflow-hidden">
                 <CardHeader className="pb-2 flex flex-row justify-between items-start space-y-0">
                   <div>
-                    <CardTitle className="text-md font-medium">Address {index + 1}</CardTitle>
+                    <CardTitle className="text-md font-medium">
+                      Address {index + 1}
+                    </CardTitle>
                   </div>
                   <div className="flex space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="h-8 w-8 p-0"
                       onClick={() => handleEdit(address)}
                       disabled={addingAddress || !!editingAddress}
@@ -602,9 +702,9 @@ const AddressManager = () => {
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                       onClick={() => handleDeleteConfirmation(addressId)}
                       disabled={addingAddress || !!editingAddress}
@@ -616,11 +716,22 @@ const AddressManager = () => {
                 </CardHeader>
                 <CardContent className="pb-4">
                   <div className="space-y-1">
-                    <p><strong>Address:</strong> {displayAddress.addressDetail}</p>
-                    <p><strong>Sub-district:</strong> {displayAddress.subDistrict}</p>
-                    <p><strong>District:</strong> {displayAddress.district}</p>
-                    <p><strong>Province:</strong> {displayAddress.province}</p>
-                    <p><strong>Postal Code:</strong> {displayAddress.postalCode}</p>
+                    <p>
+                      <strong>Address:</strong> {displayAddress.addressDetail}
+                    </p>
+                    <p>
+                      <strong>Sub-district:</strong>{" "}
+                      {displayAddress.subDistrict}
+                    </p>
+                    <p>
+                      <strong>District:</strong> {displayAddress.district}
+                    </p>
+                    <p>
+                      <strong>Province:</strong> {displayAddress.province}
+                    </p>
+                    <p>
+                      <strong>Postal Code:</strong> {displayAddress.postalCode}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -630,23 +741,29 @@ const AddressManager = () => {
       )}
 
       {/* Delete confirmation dialog */}
-      <Dialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({open, addressId: null})}>
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) =>
+          !open && setDeleteDialog({ open, addressId: null })
+        }
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Address</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this address? This action cannot be undone.
+              Are you sure you want to delete this address? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex space-x-2 sm:justify-end">
-            <Button 
-              variant="outline" 
-              onClick={() => setDeleteDialog({open: false, addressId: null})}
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialog({ open: false, addressId: null })}
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDelete}
               disabled={loading}
             >

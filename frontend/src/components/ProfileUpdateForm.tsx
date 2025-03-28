@@ -64,7 +64,7 @@ const ProfileUpdateForm: React.FC<ProfileUpdateFormProps> = ({
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("access_token");
-      
+
       if (!token) {
         toast({
           title: "Error",
@@ -74,18 +74,18 @@ const ProfileUpdateForm: React.FC<ProfileUpdateFormProps> = ({
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:8080/api/v1/users/profile", {
+      const response = await fetch("api:8080/api/v1/users/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           username: data.username,
           email: data.email,
           phone_number: data.phone_number,
           first_name: data.first_name,
-          last_name: data.last_name
+          last_name: data.last_name,
         }),
       });
 
@@ -96,9 +96,9 @@ const ProfileUpdateForm: React.FC<ProfileUpdateFormProps> = ({
 
       const responseData = await response.json();
       const updatedProfile = responseData.data.data;
-      
+
       onProfileUpdate(updatedProfile);
-      
+
       toast({
         title: "Success",
         description: "Your profile has been updated successfully",
@@ -107,7 +107,8 @@ const ProfileUpdateForm: React.FC<ProfileUpdateFormProps> = ({
       console.error("Error updating profile:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update profile",
+        description:
+          error instanceof Error ? error.message : "Failed to update profile",
         variant: "destructive",
       });
     } finally {
