@@ -18,7 +18,6 @@ type AddressService interface {
 	GetAddressByID(addressID uuid.UUID, userContext models.UserContext) (models.Address, error)
 	GetAllAddressByUserID(userID uuid.UUID, userContext models.UserContext) ([]models.Address, error)
 
-	// Add region lookups
 	GetProvinceByCode(provinceCode int) (addressModel.Province, error)
 	GetDistrictByCode(districtCode int) (addressModel.Districts, error)
 	GetSubDistrictByCode(subDistrictCode int) (addressModel.SubDistricts, error)
