@@ -3,19 +3,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 
-import Index from '@/pages/Index';
-import Login from '@/pages/login';
-import Register from '@/pages/Register';
-import NotFound from '@/pages/NotFound';
-import Products from '@/pages/Products';
-import ProductDetail from '@/pages/ProductDetail';
-import Cart from '@/pages/Cart';
-import Profile from '@/pages/Profile';
-import Orders from '@/pages/Order';
-import Admin from '@/pages/Admin';
-import AdminProducts from '@/pages/AdminProduct';
-import AdminOrders from '@/pages/AdminOrder';
-import AdminUsers from '@/pages/AdminUser';
+import Login from './pages/login';
+import Register from './pages/Register';
+import NotFound from './pages/NotFound';
+import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
+import Cart from './pages/Cart';
+import Profile from './pages/Profile';
+import Orders from './pages/Order';
+import Admin from './pages/Admin';
+import AdminProducts from './pages/AdminProduct';
+import AdminOrders from './pages/AdminOrder';
+import AdminUsers from './pages/AdminUser';
 
 // Create a client
 const queryClient = new QueryClient();
