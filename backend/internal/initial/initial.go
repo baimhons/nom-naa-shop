@@ -18,6 +18,7 @@ import (
 	"github.com/baimhons/nom-naa-shop.git/internal/utils"
 	"github.com/baimhons/nom-naa-shop.git/internal/validations"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -132,4 +133,7 @@ func (r *App) SetUpMiddlewares() {
 		middlewareConfigs.Limiter(),
 		middlewareConfigs.Healthz(),
 	)
+	r.App.Use(logger.New(logger.Config{
+		Format: "[${time}] ${status} - ${latency} ${method} ${path}\n",
+	}))
 }

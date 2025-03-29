@@ -103,7 +103,7 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("api:8080/api/v1/cart/", {
+      const response = await fetch("http://localhost:8080/api/v1/cart/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -141,7 +141,7 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("api:8080/api/v1/address/", {
+      const response = await fetch("http://localhost:8080/api/v1/address/", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -190,11 +190,14 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("api:8080/api/v1/users/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/v1/users/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch user profile");
@@ -260,14 +263,17 @@ const Orders = () => {
 
       console.log("Sending order data:", orderData);
 
-      const response = await fetch("api:8080/api/v1/order/confirm", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/v1/order/confirm",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -304,7 +310,7 @@ const Orders = () => {
   };
 
   const getSnackImage = (snack: CartItem["Snack"]) => {
-    return `api:8080/api/v1/snack/image/${snack.ID}`;
+    return `http://localhost:8080/api/v1/snack/image/${snack.ID}`;
   };
 
   if (isLoading) {

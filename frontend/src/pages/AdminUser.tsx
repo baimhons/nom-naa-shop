@@ -96,7 +96,7 @@ const AdminUsers = () => {
       }
 
       const response = await fetch(
-        `api:8080/api/v1/users/all?${queryParams.toString()}`,
+        `http://localhost:8080/api/v1/users/all?${queryParams.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -147,20 +147,23 @@ const AdminUsers = () => {
         return;
       }
 
-      const response = await fetch(`api:8080/api/v1/users/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          username: data.username,
-          email: data.email,
-          phone_number: data.phone_number,
-          first_name: data.first_name,
-          last_name: data.last_name,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/v1/users/profile`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            username: data.username,
+            email: data.email,
+            phone_number: data.phone_number,
+            first_name: data.first_name,
+            last_name: data.last_name,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
