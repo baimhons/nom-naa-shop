@@ -134,7 +134,7 @@ const RegisterForm = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/v1/users/register",
+        "http://206.189.153.4:8080/api/v1/users/register",
         {
           method: "POST",
           headers: {

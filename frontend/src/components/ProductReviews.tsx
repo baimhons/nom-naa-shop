@@ -69,7 +69,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/v1/snack/review",
+        "http://206.189.153.4:8080/api/v1/snack/review",
         {
           method: "POST",
           headers: {

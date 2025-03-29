@@ -144,7 +144,7 @@ const AddressManager = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:8080/api/v1/address", {
+      const response = await fetch("http://206.189.153.4:8080/api/v1/address", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -177,7 +177,7 @@ const AddressManager = () => {
   const fetchProvinces = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8080/api/v1/address/provinces"
+        "http://206.189.153.4:8080/api/v1/address/provinces"
       );
       if (!response.ok) {
         throw new Error("Failed to fetch provinces");
@@ -197,7 +197,7 @@ const AddressManager = () => {
   const fetchDistricts = async (provinceCode: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/address/province/${provinceCode}/districts`
+        `http://206.189.153.4:8080/api/v1/address/province/${provinceCode}/districts`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch districts");
@@ -218,7 +218,7 @@ const AddressManager = () => {
   const fetchSubDistricts = async (districtCode: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/address/district/${districtCode}/sub_districts`
+        `http://206.189.153.4:8080/api/v1/address/district/${districtCode}/sub_districts`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch sub-districts");
@@ -273,12 +273,12 @@ const AddressManager = () => {
         address_detail: data.address_detail,
       };
 
-      let url = "http://localhost:8080/api/v1/address";
+      let url = "http://206.189.153.4:8080/api/v1/address";
       let method = "POST";
 
       // If editing, include the ID and use PUT method
       if (editingAddress) {
-        url = `http://localhost:8080/api/v1/address/${editingAddress}`;
+        url = `http://206.189.153.4:8080/api/v1/address/${editingAddress}`;
         method = "PUT";
         // Add id to payload for update
         Object.assign(payload, { id: editingAddress });
@@ -396,7 +396,7 @@ const AddressManager = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8080/api/v1/address/${deleteDialog.addressId}`,
+        `http://206.189.153.4:8080/api/v1/address/${deleteDialog.addressId}`,
         {
           method: "DELETE",
           headers: {

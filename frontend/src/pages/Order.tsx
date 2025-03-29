@@ -103,7 +103,7 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:8080/api/v1/cart/", {
+      const response = await fetch("http://206.189.153.4:8080/api/v1/cart/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -141,7 +141,7 @@ const Orders = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:8080/api/v1/address/", {
+      const response = await fetch("http://206.189.153.4:8080/api/v1/address/", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -191,7 +191,7 @@ const Orders = () => {
       }
 
       const response = await fetch(
-        "http://localhost:8080/api/v1/users/profile",
+        "http://206.189.153.4:8080/api/v1/users/profile",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -264,7 +264,7 @@ const Orders = () => {
       console.log("Sending order data:", orderData);
 
       const response = await fetch(
-        "http://localhost:8080/api/v1/order/confirm",
+        "http://206.189.153.4:8080/api/v1/order/confirm",
         {
           method: "POST",
           headers: {
@@ -310,7 +310,7 @@ const Orders = () => {
   };
 
   const getSnackImage = (snack: CartItem["Snack"]) => {
-    return `http://localhost:8080/api/v1/snack/image/${snack.ID}`;
+    return `http://206.189.153.4:8080/api/v1/snack/image/${snack.ID}`;
   };
 
   if (isLoading) {

@@ -96,7 +96,7 @@ const AdminUsers = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8080/api/v1/users/all?${queryParams.toString()}`,
+        `http://206.189.153.4:8080/api/v1/users/all?${queryParams.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -148,7 +148,7 @@ const AdminUsers = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8080/api/v1/users/profile`,
+        `http://206.189.153.4:8080/api/v1/users/profile`,
         {
           method: "PUT",
           headers: {

@@ -40,7 +40,7 @@ const Admin = () => {
         if (!token) return;
 
         const response = await fetch(
-          "http://localhost:8080/api/v1/order/total-revenue",
+          "http://206.189.153.4:8080/api/v1/order/total-revenue",
           {
             headers: {
               Authorization: `Bearer ${token}`,

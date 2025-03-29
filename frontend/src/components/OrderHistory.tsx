@@ -188,7 +188,7 @@ const OrderHistory = () => {
       }
 
       const response = await fetch(
-        "http://localhost:8080/api/v1/order/history",
+        "http://206.189.153.4:8080/api/v1/order/history",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -403,7 +403,7 @@ const OrderHistory = () => {
                                 {item.Snack.Image && (
                                   <div className="h-10 w-10 bg-gray-100 rounded overflow-hidden">
                                     <img
-                                      src={`http://localhost:8080/api/v1/snack/image/${encodeURIComponent(
+                                      src={`http://206.189.153.4:8080/api/v1/snack/image/${encodeURIComponent(
                                         item.Snack.ID
                                       )}`}
                                       alt={item.Snack.Name}
@@ -438,7 +438,7 @@ const OrderHistory = () => {
                         <h4 className="text-sm font-semibold">Payment Proof</h4>
                         <div className="border rounded-md p-2 max-w-xs">
                           <AuthorizedImage
-                            src={`http://localhost:8080/api/v1/payment/proof/${order.Payment.ID}`}
+                            src={`http://206.189.153.4:8080/api/v1/payment/proof/${order.Payment.ID}`}
                             alt="Payment Proof"
                             className="max-h-40 max-w-full object-contain"
                           />

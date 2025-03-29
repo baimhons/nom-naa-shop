@@ -140,7 +140,7 @@ const fetchOrders = async (
     queryParams.append("order", params.order);
   }
 
-  const url = `http://localhost:8080/api/v1/order?${queryParams}`;
+  const url = `http://206.189.153.4:8080/api/v1/order?${queryParams}`;
 
   const response = await fetch(url, {
     headers: {
@@ -175,7 +175,7 @@ const updateOrderStatus = async ({
   status: string;
 }) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("http://localhost:8080/api/v1/order/status", {
+  const response = await fetch("http://206.189.153.4:8080/api/v1/order/status", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -662,7 +662,7 @@ const AdminOrders = () => {
                             <div className="flex items-center gap-2">
                               {item.Snack.Image ? (
                                 <img
-                                  src={`http://localhost:8080/api/v1/snack/image/${item.Snack.ID}`}
+                                  src={`http://206.189.153.4:8080/api/v1/snack/image/${item.Snack.ID}`}
                                   alt={item.Snack.Name}
                                   className="w-10 h-10 object-cover rounded"
                                 />
@@ -698,7 +698,7 @@ const AdminOrders = () => {
                 <div className="border rounded p-4 flex justify-center">
                   {viewOrderDetails.Payment && viewOrderDetails.Payment.ID ? (
                     <AuthorizedImage
-                      src={`http://localhost:8080/api/v1/payment/proof/${viewOrderDetails.Payment.ID}`}
+                      src={`http://206.189.153.4:8080/api/v1/payment/proof/${viewOrderDetails.Payment.ID}`}
                       alt="Payment proof"
                       className="max-h-60 object-contain"
                     />

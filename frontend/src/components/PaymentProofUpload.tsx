@@ -63,7 +63,7 @@ const PaymentProofUpload = ({
       formData.append("files", file);
 
       const response = await fetch(
-        "http://localhost:8080/api/v1/payment/create",
+        "http://206.189.153.4:8080/api/v1/payment/create",
         {
           method: "POST",
           headers: {
@@ -82,7 +82,7 @@ const PaymentProofUpload = ({
 
       // Verify the payment proof is uploaded
       const proofResponse = await fetch(
-        `http://localhost:8080/api/v1/payment/proof/${data.payment.ID}`,
+        `http://206.189.153.4:8080/api/v1/payment/proof/${data.payment.ID}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
