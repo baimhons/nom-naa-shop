@@ -52,25 +52,34 @@ const productSchema = z.object({
 type ProductFormValues = z.infer<typeof productSchema>;
 
 // API functions
-const fetchProducts = async () => {
+const fetchProducts = async (page: number, pageSize: number) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("http://206.189.153.4:8080/api/v1/snack", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `http://localhost:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=name&order=desc`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch products");
   }
 
   const data = await response.json();
-  return data.data;
+  console.log("total :", data.total);  // Moved before the return statement
+  
+  return {
+    products: data.data,
+    page: page,
+    pageSize: pageSize,
+  };
 };
 
 const createProduct = async (formData: FormData) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("http://206.189.153.4:8080/api/v1/snack", {
+  const response = await fetch("http://localhost:8080/api/v1/snack", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -93,7 +102,7 @@ const updateProduct = async ({
   formData: FormData;
 }) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`http://206.189.153.4:8080/api/v1/snack/${id}`, {
+  const response = await fetch(`http://localhost:8080/api/v1/snack/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -108,21 +117,6 @@ const updateProduct = async ({
   return response.json();
 };
 
-const deleteProduct = async (id: string) => {
-  const token = localStorage.getItem("access_token");
-  const response = await fetch(`http://206.189.153.4:8080/api/v1/snack/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to delete product");
-  }
-
-  return response.json();
-};
 
 const AdminProducts = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -130,16 +124,17 @@ const AdminProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
-
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
   const queryClient = useQueryClient();
 
   const {
-    data: products = [],
+    data: productsData = { products: [], total: 0, page: 0, pageSize: 10 },
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
+    queryKey: ["products", currentPage],
+    queryFn: () => fetchProducts(currentPage, itemsPerPage),
   });
 
   const createMutation = useMutation({
@@ -230,12 +225,15 @@ const AdminProducts = () => {
   // Get proper image URL for a product
   const getProductImageUrl = (product: any) => {
     if (!product.ID) return "https://via.placeholder.com/50?text=No+Image";
-    return `http://206.189.153.4:8080/api/v1/snack/image/${product.ID}`;
+    return `http://localhost:8080/api/v1/snack/image/${product.ID}`;
   };
 
-  const filteredProducts = products.filter((product: any) =>
+  const filteredProducts = productsData.products.filter((product: any) =>
     product.Name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // const totalPages = (productsData.total / itemsPerPage);
+
 
   return (
     <AdminLayout title="Manage Products">
@@ -262,62 +260,88 @@ const AdminProducts = () => {
           Error loading products: {(error as Error).message}
         </div>
       ) : (
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Image</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProducts.length === 0 ? (
+        <>
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6">
-                    No products found
-                  </TableCell>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ) : (
-                filteredProducts.map((product: any) => (
-                  <TableRow key={product.ID}>
-                    <TableCell>
-                      <img
-                        src={getProductImageUrl(product)}
-                        alt={product.Name}
-                        className="w-12 h-12 object-cover rounded-md"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "https://via.placeholder.com/50?text=No+Image";
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {product.Name}
-                    </TableCell>
-                    <TableCell>฿{product.Price.toFixed(2)}</TableCell>
-                    <TableCell>{product.Quantity}</TableCell>
-                    <TableCell>{product.Type}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditProduct(product)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                  {filteredProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6">
+                        No products found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredProducts.map((product: any) => (
+                      <TableRow key={product.ID}>
+                        <TableCell>
+                          <img
+                            src={getProductImageUrl(product)}
+                            alt={product.Name}
+                            className="w-12 h-12 object-cover rounded-md"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://via.placeholder.com/50?text=No+Image";
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {product.Name}
+                        </TableCell>
+                        <TableCell>฿{product.Price.toFixed(2)}</TableCell>
+                        <TableCell>{product.Quantity}</TableCell>
+                        <TableCell>{product.Type}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditProduct(product)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                           
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+            </Table>
+          </div>
+
+          {/* Add pagination controls */}
+          <div className="flex items-center justify-end space-x-2 py-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1))}
+              disabled={currentPage === 0}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage + 1}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1))}
+              // disabled={currentPage > totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </>
       )}
 
       {/* Product Form Dialog */}
@@ -491,27 +515,6 @@ const AdminProducts = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this product? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 };

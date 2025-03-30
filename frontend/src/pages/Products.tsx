@@ -62,8 +62,8 @@ const Products = () => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loadingCart, setLoadingCart] = useState(false);
   const [pageSize, setPageSize] = useState(12);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(10);
+  const [totalCount, setTotalCount] = useState(2);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -90,7 +90,7 @@ const Products = () => {
     if (token) {
       try {
         const response = await fetch(
-          "http://206.189.153.4:8080/api/v1/users/profile",
+          "http://localhost:8080/api/v1/users/profile",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -121,7 +121,7 @@ const Products = () => {
 
     try {
       const response = await fetch(
-        "http://206.189.153.4:8080/api/v1/users/logout",
+        "http://localhost:8080/api/v1/users/logout",
         {
           method: "POST",
           headers: {
@@ -158,7 +158,7 @@ const Products = () => {
 
   const checkNextPage = async (currentPage: number) => {
     try {
-      let nextPageUrl = `http://206.189.153.4:8080/api/v1/snack?page=${
+      let nextPageUrl = `http://localhost:8080/api/v1/snack?page=${
         currentPage + 1
       }&page_size=${pageSize}&sort=${sort}&order=${order}`;
 
@@ -185,7 +185,7 @@ const Products = () => {
 
   const fetchAllTypes = async () => {
     try {
-      const response = await fetch("http://206.189.153.4:8080/api/v1/snack/types");
+      const response = await fetch("http://localhost:8080/api/v1/snack/types");
       if (!response.ok) {
         throw new Error("Failed to fetch snack types");
       }
@@ -247,7 +247,7 @@ const Products = () => {
     setError("");
     setIsCheckingNextPage(true);
     try {
-      let apiUrl = `http://206.189.153.4:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=${sort}&order=${order}`;
+      let apiUrl = `http://localhost:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=${sort}&order=${order}`;
 
       if (selectedType) {
         apiUrl += `&type=${encodeURIComponent(selectedType)}`;
@@ -314,7 +314,7 @@ const Products = () => {
         return;
       }
 
-      const response = await fetch("http://206.189.153.4:8080/api/v1/cart/", {
+      const response = await fetch("http://localhost:8080/api/v1/cart/", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -380,7 +380,7 @@ const Products = () => {
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("access_token");
-    const response = await fetch("http://206.189.153.4:8080/api/v1/users/profile", {
+    const response = await fetch("http://localhost:8080/api/v1/users/profile", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -422,7 +422,7 @@ const Products = () => {
 
       setAddingToCartIds((prev) => [...prev, snackId]);
 
-      const response = await fetch("http://206.189.153.4:8080/api/v1/cart/", {
+      const response = await fetch("http://localhost:8080/api/v1/cart/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -479,7 +479,7 @@ const Products = () => {
 
     // Then try the API endpoint for byte array images
     try {
-      return `http://206.189.153.4:8080/api/v1/snack/image/${encodeURIComponent(
+      return `http://localhost:8080/api/v1/snack/image/${encodeURIComponent(
         snack.ID
       )}`;
     } catch (error) {
@@ -786,7 +786,7 @@ const Products = () => {
                     variant="outline"
                     onClick={handleNextPage}
                     disabled={
-                      !hasMore || isCheckingNextPage || snacks.length < pageSize
+                      hasMore || isCheckingNextPage || snacks.length < pageSize
                     }
                     className="flex items-center gap-1"
                   >
