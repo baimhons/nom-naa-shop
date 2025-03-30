@@ -96,6 +96,12 @@ func (s *snackServiceImpl) UpdateSnack(req request.UpdateSnackRequest, userConte
 	if req.Quantity != 0 {
 		existingSnack.Quantity = req.Quantity
 	}
+	if req.Description != "" {
+		existingSnack.Description = req.Description
+	}
+	if req.Name != "" {
+		existingSnack.Name = req.Name
+	}
 	if len(req.Files) > 0 {
 		imageFile, err := req.Files[0].Open()
 		if err != nil {

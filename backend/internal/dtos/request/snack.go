@@ -18,9 +18,12 @@ type CreateSnackRequest struct {
 }
 
 type UpdateSnackRequest struct {
-	Price    float64                 `form:"price" validate:"required"`
-	Quantity int                     `form:"quantity" validate:"required"`
-	Files    []*multipart.FileHeader `form:"files" `
+	Name        string                  `form:"name" validate:"required" `
+	Price       float64                 `form:"price" validate:"required"`
+	Quantity    int                     `form:"quantity" validate:"required"`
+	Type        string                  `form:"type" validate:"required"`
+	Description string                  `form:"description" validate:"required"`
+	Files       []*multipart.FileHeader `form:"files" `
 }
 
 type CreateReviewRequest struct {
