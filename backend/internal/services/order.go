@@ -232,7 +232,11 @@ func (s *OrderServiceImpl) GetAllOrders(querys request.PaginationQuery) (respons
 
 func (s *OrderServiceImpl) GetTotalRevenue() (float64, int, error) {
 	var totalRevenue float64
-	if err := s.orderRepository.GetDB().Model(&models.Order{}).Select("SUM(total_price) as total_revenue").Scan(&totalRevenue).Error; err != nil {
+	if err := s.orderRepository.GetDB().
+		Model(&models.Order{}).
+		Where("status = ?", "shipped").
+		Select("SUM(total_price) as total_revenue").
+		Scan(&totalRevenue).Error; err != nil {
 		return 0, http.StatusInternalServerError, err
 	}
 

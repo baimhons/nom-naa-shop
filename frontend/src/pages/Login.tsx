@@ -72,7 +72,7 @@ import React from "react";
        {/* Right side - Background/Image */}
        <div className="hidden md:block flex-1 bg-gradient-to-br from-primary/90 to-primary/30">
        <img
-           src="/snack_login_page_test.jpg"
+           src="/snack_login_page1.png"
            alt="Snack Banner"
            className="w-full h-full object-cover"
          />

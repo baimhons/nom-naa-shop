@@ -250,7 +250,7 @@ const AddressManager = () => {
   };
 
   const onSubmit = async (data: AddressFormData) => {
-    if (!editingAddress && userAddresses.length >= 3) {
+    if (!editingAddress && userAddresses.length >= 2) {
       toast({
         title: "Error",
         description: "Maximum of 3 addresses allowed",
