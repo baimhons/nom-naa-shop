@@ -55,7 +55,7 @@ type ProductFormValues = z.infer<typeof productSchema>;
 const fetchProducts = async (page: number, pageSize: number) => {
   const token = localStorage.getItem("access_token");
   const response = await fetch(
-    `http://localhost:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=name&order=desc`,
+    `http://206.189.153.4:8080/api/v1/snack?page=${page}&page_size=${pageSize}&sort=name&order=desc`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -79,7 +79,7 @@ const fetchProducts = async (page: number, pageSize: number) => {
 
 const createProduct = async (formData: FormData) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch("http://localhost:8080/api/v1/snack", {
+  const response = await fetch("http://206.189.153.4:8080/api/v1/snack", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -102,7 +102,7 @@ const updateProduct = async ({
   formData: FormData;
 }) => {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`http://localhost:8080/api/v1/snack/${id}`, {
+  const response = await fetch(`http://206.189.153.4:8080/api/v1/snack/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -225,7 +225,7 @@ const AdminProducts = () => {
   // Get proper image URL for a product
   const getProductImageUrl = (product: any) => {
     if (!product.ID) return "https://via.placeholder.com/50?text=No+Image";
-    return `http://localhost:8080/api/v1/snack/image/${product.ID}`;
+    return `http://206.189.153.4:8080/api/v1/snack/image/${product.ID}`;
   };
 
   const filteredProducts = productsData.products.filter((product: any) =>
