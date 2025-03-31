@@ -57,7 +57,7 @@ func (r *baseRepository[T]) Create(item *T) error {
 }
 
 func (r *baseRepository[T]) Update(item *T) error {
-	return r.DB.Save(item).Error
+	return r.DB.Updates(item).Error
 }
 
 func (r *baseRepository[T]) Delete(item *T) error {

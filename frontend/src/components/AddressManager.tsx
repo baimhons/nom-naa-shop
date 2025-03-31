@@ -253,7 +253,7 @@ const AddressManager = () => {
     if (!editingAddress && userAddresses.length >= 2) {
       toast({
         title: "Error",
-        description: "Maximum of 3 addresses allowed",
+        description: "Maximum of 2 addresses allowed",
         variant: "destructive",
       });
       return;
@@ -497,7 +497,7 @@ const AddressManager = () => {
           <CardDescription>
             {editingAddress
               ? "Update your address information"
-              : "You can add up to 3 addresses"}
+              : "You can add up to 2 addresses"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -659,7 +659,7 @@ const AddressManager = () => {
           <MapPin className="h-5 w-5" />
           Your Addresses
         </h3>
-        {!addingAddress && !editingAddress && userAddresses.length < 3 && (
+        {!addingAddress && !editingAddress && userAddresses.length < 2 && (
           <Button onClick={() => setAddingAddress(true)} size="sm">
             <Plus className="mr-2 h-4 w-4" /> Add Address
           </Button>
