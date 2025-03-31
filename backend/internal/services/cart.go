@@ -70,7 +70,7 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 			CartID:   cart.ID,
 		}
 
-		if err := s.itemRepository.Update(&newItem); err != nil {
+		if err := s.itemRepository.Create(&newItem); err != nil {
 			return nil, fiber.StatusInternalServerError, errors.New("failed to create item: " + err.Error())
 		}
 	}
