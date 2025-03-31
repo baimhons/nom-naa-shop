@@ -47,7 +47,18 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 		return nil, fiber.StatusBadRequest, errors.New("stock not enough")
 	}
 
+	tx := s.cartRepository.Begin()
+
 	if len(cart.Items) == 0 {
+		if err := tx.Create(&models.Item{
+			SnackID:  req.SnackID,
+			Quantity: req.Quantity,
+			CartID:   cart.ID,
+		}).Error; err != nil {
+			tx.Rollback()
+			return nil, fiber.StatusInternalServerError, errors.New("failed to create item: " + err.Error())
+		}
+
 		cart.Items = append(cart.Items, models.Item{
 			SnackID:  req.SnackID,
 			Quantity: req.Quantity,
@@ -58,20 +69,33 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 	for _, cartItem := range cart.Items {
 		if cartItem.SnackID == req.SnackID {
 			cartItem.Quantity += req.Quantity
+			itemForUpdate := models.Item{}
+			if err := tx.First(&itemForUpdate, "id = ?", cartItem.ID).Error; err != nil {
+				tx.Rollback()
+				return nil, fiber.StatusInternalServerError, errors.New("failed to get item: " + err.Error())
+			}
+
+			itemForUpdate.Quantity = cartItem.Quantity
+			if err := tx.Updates(&itemForUpdate).Error; err != nil {
+				tx.Rollback()
+				return nil, fiber.StatusInternalServerError, errors.New("failed to update item: " + err.Error())
+			}
 		} else {
+			if err := tx.Create(&models.Item{
+				SnackID:  req.SnackID,
+				Quantity: req.Quantity,
+				CartID:   cart.ID,
+			}).Error; err != nil {
+				tx.Rollback()
+				return nil, fiber.StatusInternalServerError, errors.New("failed to create item: " + err.Error())
+			}
+
 			cart.Items = append(cart.Items, models.Item{
 				SnackID:  req.SnackID,
 				Quantity: req.Quantity,
 				CartID:   cart.ID,
 			})
 		}
-	}
-
-	tx := s.cartRepository.Begin()
-
-	if err := tx.Save(&cart).Error; err != nil {
-		tx.Rollback()
-		return nil, fiber.StatusInternalServerError, errors.New("failed to update cart: " + err.Error())
 	}
 
 	if err := tx.Commit().Error; err != nil {
