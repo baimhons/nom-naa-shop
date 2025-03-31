@@ -102,6 +102,9 @@ func (s *snackServiceImpl) UpdateSnack(req request.UpdateSnackRequest, userConte
 	if req.Name != "" {
 		existingSnack.Name = req.Name
 	}
+	if req.Type != "" {
+		existingSnack.Type = req.Type
+	}
 	if len(req.Files) > 0 {
 		imageFile, err := req.Files[0].Open()
 		if err != nil {
