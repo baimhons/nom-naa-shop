@@ -47,6 +47,14 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 		return nil, fiber.StatusBadRequest, errors.New("stock not enough")
 	}
 
+	if len(cart.Items) == 0 {
+		cart.Items = append(cart.Items, models.Item{
+			SnackID:  req.SnackID,
+			Quantity: req.Quantity,
+			CartID:   cart.ID,
+		})
+	}
+
 	for _, cartItem := range cart.Items {
 		if cartItem.SnackID == req.SnackID {
 			cartItem.Quantity += req.Quantity
