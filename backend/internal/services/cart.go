@@ -47,40 +47,30 @@ func (s *CartServiceImpl) AddItemToCart(req request.AddItemToCartRequest, userCo
 		return nil, fiber.StatusBadRequest, errors.New("stock not enough")
 	}
 
-	isExist := false
-	var existingItem *models.Item
-
-	for i := range cart.Items {
-		if cart.Items[i].SnackID == req.SnackID {
-			isExist = true
-			existingItem = &cart.Items[i]
-			break
+	for _, cartItem := range cart.Items {
+		if cartItem.SnackID == req.SnackID {
+			cartItem.Quantity += req.Quantity
+		} else {
+			cart.Items = append(cart.Items, models.Item{
+				SnackID:  req.SnackID,
+				Quantity: req.Quantity,
+				CartID:   cart.ID,
+			})
 		}
 	}
 
-	if isExist {
-		existingItem.Quantity += req.Quantity
-		if err := s.itemRepository.Update(existingItem); err != nil {
-			return nil, fiber.StatusInternalServerError, errors.New("failed to update item: " + err.Error())
-		}
-	} else {
-		newItem := models.Item{
-			SnackID:  req.SnackID,
-			Quantity: req.Quantity,
-			CartID:   cart.ID,
-		}
+	tx := s.cartRepository.Begin()
 
-		if err := s.itemRepository.Create(&newItem); err != nil {
-			return nil, fiber.StatusInternalServerError, errors.New("failed to create item: " + err.Error())
-		}
+	if err := tx.Save(&cart).Error; err != nil {
+		tx.Rollback()
+		return nil, fiber.StatusInternalServerError, errors.New("failed to update cart: " + err.Error())
 	}
 
-	updatedCart, err := s.cartRepository.GetCartByID(cart.ID)
-	if err != nil {
-		return nil, fiber.StatusInternalServerError, errors.New("failed to fetch updated cart: " + err.Error())
+	if err := tx.Commit().Error; err != nil {
+		return nil, fiber.StatusInternalServerError, errors.New("failed to commit transaction: " + err.Error())
 	}
 
-	return updatedCart, fiber.StatusOK, nil
+	return cart, fiber.StatusOK, nil
 }
 
 func (s *CartServiceImpl) GetCartByID(id uuid.UUID) (*models.Cart, int, error) {
